@@ -11,7 +11,7 @@ import SearchBar from './searchbar'
 export default function Maps() {
 
   const [currentLocation, setCurrentLocation] = useState({ latitude: 43.032201, longitude: -76.122812 })
-
+  const [destination, setDestination] = useState('')
   supabase.auth.getSession().then(({ data: { session } }) => {
     console.log(session)
   }
@@ -24,6 +24,9 @@ export default function Maps() {
   })
   .subscribe()
 
+  const getData = (data: any) => {
+    console.log(data)
+  }
 
   return (
     <View style={{ flex: 1, display: 'flex'  }}>
@@ -36,7 +39,7 @@ export default function Maps() {
         alignItems: 'center',
         marginTop: 20,
         }}>
-      <SearchBar />
+      <SearchBar onSearch={getData} />
 
       </SafeAreaView>
       <MapView
