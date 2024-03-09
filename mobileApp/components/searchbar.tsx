@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { TextInput, View, StyleSheet, SafeAreaView } from 'react-native';
 import { Button } from 'react-native-elements';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-
+import googleAPIKEY from './lib/googleAPIKEY';
 const SearchBar = (props: any) => {
   const [searchText, setSearchText] = useState('');
 
@@ -27,11 +27,11 @@ const SearchBar = (props: any) => {
             handleSearch(data.description);
             }}
             query={{
-            key: 'AIzaSyAAFSFl1024iEV_upockgRh5GZ7Svpi_Bk',
+            key: googleAPIKEY,
             language: 'en',
             }}
         />
-        <Button title="Search" onPress={() => handleSearch(searchText)}  style={styles.search}/>
+        {/* <Button title="Search" onPress={() => handleSearch(searchText)}  style={styles.search}/> */}
     </SafeAreaView>
   );
 };

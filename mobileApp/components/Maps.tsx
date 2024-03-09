@@ -7,11 +7,13 @@ import { SafeAreaView, View } from 'react-native'
 import { Session } from '@supabase/supabase-js'
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'
 import SearchBar from './searchbar'
-
+import MapViewDirections from 'react-native-maps-directions';
+import googleAPIKEY from './lib/googleAPIKEY'
 export default function Maps() {
 
   const [currentLocation, setCurrentLocation] = useState({ latitude: 43.032201, longitude: -76.122812 })
   const [destination, setDestination] = useState('')
+  const [latlngDelta, setLatlngDelta] = useState({ latitudeDelta: 0.00950, longitudeDelta: 0.00450 })
   supabase.auth.getSession().then(({ data: { session } }) => {
     console.log(session)
   }
@@ -24,10 +26,13 @@ export default function Maps() {
   })
   .subscribe()
 
-  const getData = (data: any) => {
-    console.log(data)
+  const getData = (destination: any) => {
+    console.log("Coming from Searchbar",destination)
+    setDestination(destination)
   }
-
+  if (destination) {
+    console.log("Destination",destination)
+  }
   return (
     <View style={{ flex: 1, display: 'flex'  }}>
       <SafeAreaView style={{     
@@ -49,11 +54,25 @@ export default function Maps() {
         initialRegion={{
           latitude: 43.032201,
           longitude: -76.122812,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
+          latitudeDelta: latlngDelta.latitudeDelta,
+          longitudeDelta: latlngDelta.longitudeDelta,
+
         }}
       >
         <Marker coordinate={{ latitude: 43.032201, longitude: -76.122812 }} />
+        {
+          destination && 
+          <MapViewDirections
+          origin={currentLocation}
+          destination={destination}
+          apikey={googleAPIKEY}
+          strokeWidth={3}
+          strokeColor="hotpink"
+        />
+        
+        }
+        
+
 
       </MapView>
 
