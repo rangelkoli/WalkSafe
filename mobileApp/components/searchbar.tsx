@@ -20,7 +20,7 @@ const SearchBar = (props: any) => {
     <SafeAreaView style={styles.container}>
 
         <GooglePlacesAutocomplete
-            placeholder="Search"
+            placeholder="Search for your route..."
             onPress={(data, details = null) => {
             // 'details' is provided when fetchDetails = true
             console.log(data, details);
@@ -29,6 +29,22 @@ const SearchBar = (props: any) => {
             query={{
             key: googleAPIKEY,
             language: 'en',
+            }}
+            styles={{
+            textInput: {
+                borderRadius: 10,
+                height: 50,
+                borderColor: 'gray',
+                borderWidth: 1,
+                paddingHorizontal: 10,
+                width: '100%',
+                shadowColor: 'black',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                
+
+            },
             }}
         />
         {/* <Button title="Search" onPress={() => handleSearch(searchText)}  style={styles.search}/> */}

@@ -34,4 +34,4 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-mobileApp/components/lib/googleAPIKEY.tsx
+/components/lib/googleAPIKEY.tsx

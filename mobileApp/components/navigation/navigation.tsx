@@ -5,6 +5,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import Maps from '../Maps';
 import { Session } from '@supabase/supabase-js';
 import Account from '../Account';
+import AddAlert from '../AddAlert';
+import Family from '../Family';
 
 const Tab = createMaterialBottomTabNavigator();
 
@@ -20,6 +22,7 @@ export default function BottomNavigation(
         style={{
             backgroundColor: 'blue',
             margin: 0,
+            padding: 0,
         }}
         
         >
@@ -29,15 +32,31 @@ export default function BottomNavigation(
             options={{
                 tabBarLabel: 'Home',
                 tabBarColor: 'blue',
+                
 
             }} 
             
             />
+
         <Tab.Screen
+            name="Family"
+            component={Family}
+            options={{
+                tabBarLabel: 'Family',
+            }}
+        />
+                <Tab.Screen
+            name="Alerts"
+            component={AddAlert}
+            options={{
+                tabBarLabel: 'Alerts',
+            }}
+        />
+                <Tab.Screen
             name="Test"
             component={Test}
             options={{
-                tabBarLabel: 'Test',
+                tabBarLabel: 'Family',
             }}
         />
         <Tab.Screen
