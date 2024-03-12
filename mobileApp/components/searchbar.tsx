@@ -5,11 +5,23 @@ import { TextInput, View, StyleSheet, SafeAreaView } from 'react-native';
 import { Button } from 'react-native-elements';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import googleAPIKEY from './lib/googleAPIKEY';
+import Geocoder from 'react-native-geocoding';
+
+Geocoder.init(googleAPIKEY); // use a valid API key
+
 const SearchBar = (props: any) => {
   const [searchText, setSearchText] = useState('');
+  const [location, setLocation] = useState({});
 
   const handleSearch = (text: string) => {
     setSearchText(text);
+    Geocoder.from(text)
+		.then(json => {
+            setLocation(json.results[0].geometry.location);
+			console.log(location);
+		})
+		.catch(error => console.warn(error));
+
     props.onSearch(text);
 
     // Perform search logic here

@@ -76,7 +76,7 @@ export default function BottomNavigation(
                             }}
                         >
                             <Image
-                                source={require('./family.png')}
+                                source={require('./familyOutline.png')}
                                 style={{ width: 30, height: 30}}
                             />
                         </View>
@@ -90,31 +90,7 @@ export default function BottomNavigation(
             component={AddAlert}
             options={{
                 tabBarLabel: 'Alerts',
-                // tabBarIcon: ({ color }) => {
-                //     return (
-                //         <View
-                //             style={{ 
-                //                 width: 30, 
-                //                 height: 30,
-                //                 top: Platform.OS === 'ios' ? -30 : -20,
-                //                 minWidth: Platform.OS === 'ios' ? 50 : 60,
-                //                 minHeight: Platform.OS === 'ios' ? 50 : 60,
-                //                 borderRadius: 50,
-                //                 backgroundColor: color,
-                //                 justifyContent: 'center',
-                //                 alignItems: 'center',
-                //                 shadowColor: 'black',
-                //                 }}
-                //         >
-                //             <Image
-                //                 source={require('./home.svg')}
-                //                 style={{ width: 20, height: 20, zIndex: 10}}
-                //                 width={20}
-                //                 height={20}
-                //             />
-                //         </View>
-                //     )
-                // }  
+                
                 tabBarIcon: ({ color }) => {
                     return (
                         <View

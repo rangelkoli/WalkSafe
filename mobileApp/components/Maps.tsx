@@ -106,6 +106,18 @@ export default function Maps() {
             }
           />
         }
+        {/* {
+          destination && 
+          <Marker
+            coordinate={{}}
+            title={"Destination"}
+            description={"Destination"}
+            shouldRasterizeIOS={true}
+            tracksViewChanges={true}
+            tracksInfoWindowChanges={true}
+            tappable={true}
+            onPress={() => console.log('Marker pressed')}
+        } */}
 
         {
           markers.map((marker, index) => (
@@ -114,6 +126,11 @@ export default function Maps() {
               coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
               title={"Alert"}
               description={"Alert"}
+              shouldRasterizeIOS={true}
+              tracksViewChanges={true}
+              tracksInfoWindowChanges={true}
+              tappable={true}
+              onPress={() => console.log('Marker pressed')}
             />
           ))
         }
