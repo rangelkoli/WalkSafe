@@ -5,13 +5,19 @@ import { RadioButton } from 'react-native-paper';
 import { Button } from 'react-native-paper';
 import { ToggleButton } from 'react-native-paper';
 import  { supabase } from './lib/supabase'
+import { Session } from '@supabase/supabase-js';
 
-const AddAlert = () => {
+const AddAlert = ({session }: {session: Session}) => {
     const [inputValue, setInputValue] = useState('')
     const [value, setValue] = React.useState('first');
-    const alertTypes = [{type: 'Larceny', icon: 'alert-circle'}, {type: 'assault', icon: 'alert-circle'}, {type: 'vandalism', icon: 'alert-circle'}, {type: 'theft', icon: 'alert-circle'}, {type: 'other', icon: 'alert-circle'}]
+    const alertTypes = [
+        {type: 'Larceny', icon: 'alert-circle'}, 
+        {type: 'assault', icon: 'alert-circle'}, 
+        {type: 'vandalism', icon: 'alert-circle'}, 
+        {type: 'theft', icon: 'alert-circle'}, 
+        {type: 'other', icon: 'alert-circle'}
+    ]
     const [user, setUser] = useState({}) as any
-
 
 
     const handleInputChange = (text: string) => {
@@ -26,9 +32,10 @@ const AddAlert = () => {
             .from('alerts')
             .insert({   
                 alert: value,
-                latitude: 43.032201,
-                longitude: -76.122812,
-                created_at: new Date().toISOString()
+                latitude: 43.031902, 
+                longitude: -76.118488,
+                created_at: new Date().toISOString(),
+                User: session.user?.id
              })
     }
     return (
@@ -51,15 +58,17 @@ const AddAlert = () => {
             <ToggleButton.Group
                 onValueChange={value => setValue(value)}
                 value={value}
+                key={value}
                 children={alertTypes.map((type) => (
                     <ToggleButton 
-                    icon={type.icon}
+                    icon={require('./alertDanger.png')}
                     value={type.type} 
                     style={[
                         styles.radioItems, 
                         styles.larceny, 
                         {
-                            backgroundColor: value === type.type ? 'red' : 'white'
+                            backgroundColor: value === type.type ? 'red' : 'white',
+                            
                         }
                     ]}
 

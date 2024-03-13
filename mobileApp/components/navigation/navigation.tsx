@@ -29,6 +29,13 @@ export default function BottomNavigation(
             borderRadius: 0,
             backgroundColor: 'white',
         }}
+        sceneAnimationType='shifting'
+        sceneAnimationEnabled={true}
+        compact={true}
+
+        renderTouchable={Platform.OS === 'web' ? undefined : undefined}
+        keyboardHidesNavigationBar={true}
+        shifting={true}
         screenOptions={{
             tabBarColor: 'blue',
         }}
@@ -87,8 +94,10 @@ export default function BottomNavigation(
         />
                 <Tab.Screen
             name="Alerts"
-            component={AddAlert}
+            children={()=><AddAlert session={session} />}
+            
             options={{
+                
                 tabBarLabel: 'Alerts',
                 
                 tabBarIcon: ({ color }) => {
@@ -113,28 +122,7 @@ export default function BottomNavigation(
 
             }}
         />
-                <Tab.Screen
-            name="Test"
-            component={Test}
-            options={{
-                tabBarLabel: 'Family',
-                tabBarIcon: ({ color }) => {
-                    return (
-                        <View
-                            style={{ 
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <Image
-                                source={require('./home.png')}
-                                style={{ width: 30, height: 30}}
-                            />
-                        </View>
-                    )
-                }  
-            }}
-        />
+       
         <Tab.Screen
             name="Account"
             children={()=><Account session={session} />}
