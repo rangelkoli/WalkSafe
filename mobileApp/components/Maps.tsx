@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import Auth from './Auth'
 import Account from './Account'
-import { SafeAreaView, View, Text } from 'react-native'
+import { SafeAreaView, View, Text, Pressable } from 'react-native'
 import { Session } from '@supabase/supabase-js'
 import MapView, { Marker, PROVIDER_GOOGLE, Callout } from 'react-native-maps'
 import SearchBar from './searchbar'
@@ -14,6 +14,7 @@ import Geocoder from 'react-native-geocoding'
 import LottieView from 'lottie-react-native';
 import alertBright from './alertBrightest.json'
 import { Image } from 'react-native-elements'
+import { setValue } from './lib/currentLocation'
 
 Geocoder.init(googleAPIKEY); // use a valid API key
 
@@ -25,19 +26,20 @@ export default function Maps() {
   const [destination, setDestination] = useState('')
   const [destinationLatLng, setDestinationLatLng] = useState({ lat: 0, lng: 0 })
   const [latlngDelta, setLatlngDelta] = useState({ latitudeDelta: 0.095, longitudeDelta: 0.045 })
-  const [markers, setMarkers] = useState<{ latitude: number, longitude: number }[]>([]) // Add state variable for markers
+  const [markers, setMarkers] = useState<{ latitude: number, longitude: number, alert:string }[]>([]) // Add state variable for markers
   const [region , setRegion] = useState({latitude: 43.032201, longitude: -76.122812, latitudeDelta: 0.0922, longitudeDelta: 0.0421})
   const [mapView, setMapView] = useState<any>()
   const getMarkers = () => {
     supabase
       .from('alerts')
-      .select('latitude, longitude')
+      .select('latitude, longitude, alert')
       .then(({ data: alerts, error }) => {
         if (error) console.log('Error fetching alerts:', error)
         else {
           const newMarkers = alerts.map((alert: any) => ({
             latitude: alert.latitude,
-            longitude: alert.longitude
+            longitude: alert.longitude,
+            alert: alert.alert
           }))
           setMarkers(prevMarkers => [...prevMarkers, ...newMarkers])
         }
@@ -46,8 +48,10 @@ export default function Maps() {
 
   useEffect(() => {
     getMarkers() // Call getMarkers function once at the start
+    setValue(currentLocation)
     const interval = setInterval(() => {
       getMarkers()
+      console.log('Current Location From Maps:', currentLocation)
     }, 10000) // Fetch markers every 1 minute
 
     return () => {
@@ -173,8 +177,22 @@ export default function Maps() {
               icon={require('./alertYellow.png')}
             >
               <Callout tooltip={true} onPress={() => console.log('Callout pressed')}>
-                <View style={{ flex: 1,padding: 4, display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor:'white' }}>
+                <View style={{ flex: 1,
+                  padding: 10, 
+                  display: 'flex', 
+                  flexDirection: 'row', 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  backgroundColor:'white',
+                  borderRadius: 20,
+                  shadowColor: 'black',
+                  shadowOffset: { width: 0, height: 2 },
+                  
+                  }}>
                   <Text>Alert</Text>
+                  <Pressable onPress={() => console.log('Pressed')}>
+                    <Image source={require('./likeButton.png')} style={{ width: 15, height: 15 }} />
+                  </Pressable>
                 </View>
               </Callout>
             </Marker>

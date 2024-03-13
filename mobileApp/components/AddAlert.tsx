@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { StyleSheet, Text, View, SafeAreaView, TextInput } from 'react-native'
 import { RadioButton } from 'react-native-paper';
 import { Button } from 'react-native-paper';
 import { ToggleButton } from 'react-native-paper';
 import  { supabase } from './lib/supabase'
 import { Session } from '@supabase/supabase-js';
+import { getLatestValue } from './lib/currentLocation';
 
 const AddAlert = ({session }: {session: Session}) => {
     const [inputValue, setInputValue] = useState('')
@@ -18,8 +19,13 @@ const AddAlert = ({session }: {session: Session}) => {
         {type: 'other', icon: 'alert-circle'}
     ]
     const [user, setUser] = useState({}) as any
+    const [ currentLocation, setCurrentLocation ] = useState({latitude: 43.032201, longitude: -76.122812})
 
-
+    useEffect(() => {
+        const currLoc = getLatestValue()
+        console.log('Current Location:', currLoc)
+        setCurrentLocation(getLatestValue())
+    })
     const handleInputChange = (text: string) => {
         setInputValue(text)
     }
@@ -32,8 +38,8 @@ const AddAlert = ({session }: {session: Session}) => {
             .from('alerts')
             .insert({   
                 alert: value,
-                latitude: 43.030384,
-                longitude:  -76.118552,
+                latitude: currentLocation.latitude,
+                longitude:  currentLocation.longitude,
                 created_at: new Date().toISOString(),
                 User: session.user?.id
              })
