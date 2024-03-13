@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import Auth from './Auth'
 import Account from './Account'
-import { SafeAreaView, View } from 'react-native'
+import { SafeAreaView, View, Text } from 'react-native'
 import { Session } from '@supabase/supabase-js'
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'
+import MapView, { Marker, PROVIDER_GOOGLE, Callout } from 'react-native-maps'
 import SearchBar from './searchbar'
 import MapViewDirections from 'react-native-maps-directions';
 import googleAPIKEY from './lib/googleAPIKEY'
@@ -14,7 +14,6 @@ import Geocoder from 'react-native-geocoding'
 import LottieView from 'lottie-react-native';
 import alertBright from './alertBrightest.json'
 import { Image } from 'react-native-elements'
-
 
 Geocoder.init(googleAPIKEY); // use a valid API key
 
@@ -44,16 +43,18 @@ export default function Maps() {
         }
       })
   }
-  getMarkers()
+
   useEffect(() => {
-    supabase
-      .channel('alerts')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'alerts' }, payload => {
-        console.log('Change received!', payload)
-        setMarkers(prevMarkers => [...prevMarkers, { latitude: payload.new.latitude, longitude: payload.new.longitude }]) // Update markers state with new value
-      })
-      .subscribe()
+    getMarkers() // Call getMarkers function once at the start
+    const interval = setInterval(() => {
+      getMarkers()
+    }, 10000) // Fetch markers every 1 minute
+
+    return () => {
+      clearInterval(interval)
+    }
   }, [])
+
 
   const getData = (destination: any) => {
     Geocoder.from(destination)
@@ -62,12 +63,9 @@ export default function Maps() {
 			var location = json.results[0].geometry.location;
 			console.log(location);
 		})
-		.catch(error => console.warn(error));
-
-    
+		.catch(error => console.warn(error)); 
     setDestination(destination)
   }
-
   return (
     <View style={{ flex: 1, display: 'flex' }}>
       <SafeAreaView style={{
@@ -89,7 +87,6 @@ export default function Maps() {
       <MapView
       ref={mapView}
         provider={PROVIDER_GOOGLE}
-        followsUserLocation={true}
         style={{ flex: 1 }}
         googleMapId='3277db22b22e7eab'
         initialRegion={{
@@ -102,15 +99,11 @@ export default function Maps() {
           setRegion(region)
         }
         }
-        renderToHardwareTextureAndroid={true}
-        removeClippedSubviews={true}
         role='alert'
         showsUserLocation={true}
         showsMyLocationButton={true}
-        showsPointsOfInterest={true}
         rotateEnabled={true}
         nativeID='map'
-        needsOffscreenAlphaCompositing={true}
         customMapStyle={[]} // Add custom map style
         cacheEnabled={true}
         mapType='standard'  
@@ -124,7 +117,7 @@ export default function Maps() {
             strokeWidth={3}
             mode='WALKING'
             optimizeWaypoints={true}
-            strokeColor="hotpink"
+            strokeColor="blue"
             onStart={(params) => {
               console.log(`Started routing between "${params.origin}" and "${params.destination}"`)
             }}
@@ -145,17 +138,7 @@ export default function Maps() {
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
               })
-              
-              // mapView.fitToCoordinates(result.coordinates, {
-              //   edgePadding: {
-              //     right: (width / 20),
-              //     bottom: (height / 20),
-              //     left: (width / 20),
-              //     top: (height / 20),
-              //   }
-              // })
             }
-              
             }
           />
         }
@@ -169,8 +152,10 @@ export default function Maps() {
             tracksViewChanges={true}
             tracksInfoWindowChanges={true}
             tappable={true}
-            onPress={() => console.log('Marker pressed')}
-          />
+            onPress={(event) => {
+              console.log(event.nativeEvent)
+             }}          
+             />
         }
         {
           markers.map((marker, index) => (
@@ -187,16 +172,11 @@ export default function Maps() {
               // icon={require('./alertSmallDangerS.png')}
               icon={require('./alertYellow.png')}
             >
-              {/* <LottieView 
-              source={alertBright} 
-              autoPlay 
-              loop
-              speed={0.1}
-              style={{
-                width: 40,
-                height: 40,
-              
-              }} /> */}
+              <Callout tooltip={true} onPress={() => console.log('Callout pressed')}>
+                <View style={{ flex: 1,padding: 4, display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor:'white' }}>
+                  <Text>Alert</Text>
+                </View>
+              </Callout>
             </Marker>
           ))
         }

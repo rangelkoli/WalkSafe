@@ -32,8 +32,8 @@ const AddAlert = ({session }: {session: Session}) => {
             .from('alerts')
             .insert({   
                 alert: value,
-                latitude: 43.031902, 
-                longitude: -76.118488,
+                latitude: 43.030384,
+                longitude:  -76.118552,
                 created_at: new Date().toISOString(),
                 User: session.user?.id
              })

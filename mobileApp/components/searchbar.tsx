@@ -41,15 +41,26 @@ const SearchBar = (props: any) => {
             query={{
             key: googleAPIKEY,
             language: 'en',
+            components: 'country:us',
+            
             }}
             styles={{
             textInput: {
-                borderRadius: 10,
-                height: 50,
-                borderColor: 'gray',
-                borderWidth: 1,
-                paddingHorizontal: 10,
-                width: '100%',
+              backgroundColor: '#FFFFFF',
+              height: 44,
+              borderRadius: 5,
+              paddingVertical: 5,
+              paddingHorizontal: 10,
+              fontSize: 15,
+              flex: 1,
+              borderColor: 'gray',
+              borderWidth: 1,
+              shadowColor: '#000',
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.5,
             },
             }}
         />
