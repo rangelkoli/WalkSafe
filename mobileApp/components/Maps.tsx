@@ -27,7 +27,7 @@ export default function Maps() {
   const [destinationLatLng, setDestinationLatLng] = useState({ lat: 0, lng: 0 })
   const [latlngDelta, setLatlngDelta] = useState({ latitudeDelta: 0.095, longitudeDelta: 0.045 })
   const [markers, setMarkers] = useState<{ latitude: number, longitude: number }[]>([]) // Add state variable for markers
-  const [region , setRegion] = useState({latitude: 43.032201, longitude: -76.122812})
+  const [region , setRegion] = useState({latitude: 43.032201, longitude: -76.122812, latitudeDelta: 0.0922, longitudeDelta: 0.0421})
   const [mapView, setMapView] = useState<any>()
   const getMarkers = () => {
     supabase
@@ -102,7 +102,6 @@ export default function Maps() {
           setRegion(region)
         }
         }
-        
         renderToHardwareTextureAndroid={true}
         removeClippedSubviews={true}
         role='alert'
@@ -114,9 +113,7 @@ export default function Maps() {
         needsOffscreenAlphaCompositing={true}
         customMapStyle={[]} // Add custom map style
         cacheEnabled={true}
-        mapType='standard'
-
-        
+        mapType='standard'  
       >
         {/* <Marker coordinate={{ latitude: 43.032201, longitude: -76.122812 }} /> */}
         {destination &&
@@ -142,6 +139,12 @@ export default function Maps() {
             onReady={result => {
               console.log('Distance: ', result.distance)
               console.log('Duration: ', result.duration)
+              setRegion({
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              })
               
               // mapView.fitToCoordinates(result.coordinates, {
               //   edgePadding: {
@@ -194,8 +197,6 @@ export default function Maps() {
                 height: 40,
               
               }} /> */}
-
-           
             </Marker>
           ))
         }

@@ -58,11 +58,11 @@ const AddAlert = ({session }: {session: Session}) => {
             <ToggleButton.Group
                 onValueChange={value => setValue(value)}
                 value={value}
-                key={value}
                 children={alertTypes.map((type) => (
                     <ToggleButton 
                     icon={require('./alertDanger.png')}
                     value={type.type} 
+                    key={type.type}
                     style={[
                         styles.radioItems, 
                         styles.larceny, 
