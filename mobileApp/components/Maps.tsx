@@ -30,6 +30,11 @@ export default function Maps({ session }: { session: Session}) {
   const [destinationLatLng, setDestinationLatLng] = useState({ lat: 0, lng: 0 })
   const [latlngDelta, setLatlngDelta] = useState({ latitudeDelta: 0.095, longitudeDelta: 0.045 })
   const [markers, setMarkers] = useState<{ latitude: number, longitude: number, alert:string }[]>([]) // Add state variable for markers
+  const [familyMarkers, setFamilyMarkers] = useState<[{}]>([{
+    username: '',
+    currentLocation: { latitude: 0, longitude: 0 },
+    avatar_url: ''
+  }]) // Add state variable for markers
   const [region , setRegion] = useState({latitude: 43.032201, longitude: -76.122812, latitudeDelta: 0.0922, longitudeDelta: 0.0421})
   const [mapView, setMapView] = useState<any>()
   const [polylineCoordinates, setPolylineCoordinates] = useState<any>([{latitude: 43.032201, longitude: -76.122812}, {latitude: 43.032201, longitude: -76.122812}])
@@ -75,10 +80,13 @@ const location = async () => {
     location()
     getMarkers() // Call getMarkers function once at the start
     setValue(currentLocation)
+    getFamilyMarkers()
+
     const interval = setInterval(() => {
       getMarkers()
       console.log('Current Location From Maps:', currentLocation)
       location()
+      getFamilyMarkers()
 
     }, 10000) // Fetch markers every 1 minute
 
@@ -86,20 +94,32 @@ const location = async () => {
       clearInterval(interval)
     }
   }, [])
-
-
   useEffect(() => {
     updateLocationDB()
     const interval = setInterval(() => {
-
       updateLocationDB()
-
     }, 60000) // Update Location every 1 min
-
     return () => {
       clearInterval(interval)
     }
   }, [])
+  const getFamilyMarkers = async () => {
+    const { data: family, error } = await supabase
+      .from('profiles')
+      .select('username, currentLocation, avatar_url')
+      .eq('id', session?.user?.id)
+    if (family && family.length > 0) {
+      const id = session?.user?.id; // Define the id variable
+      const friendsUUIDs = ['f2d4a61d-a345-49d1-98e6-24d61b46aabc', 'fdd5fe65-11dc-4e82-830a-1502b152fc6e']; // Array of UUIDs
+      const { data: friends, error: friendsError } = await supabase
+        .from('profiles')
+        .select('username, family, currentLocation, avatar_url')
+        .in('id', friendsUUIDs); // Use 'in' instead of 'containedBy'
+        setFamilyMarkers(friends);
+      console.log('Friends:', friends);
+      console.log('Family:', family);
+    }
+  }
 
   const getData = (destination: any) => {
     Geocoder.from(destination)
@@ -162,6 +182,46 @@ const location = async () => {
         cacheEnabled={true}
         mapType='standard'  
       >
+        {
+          familyMarkers.length > 0 &&
+          familyMarkers.map((familyMarker: any, index: number) => (
+            <Marker
+              key={index}
+              coordinate={{ latitude: familyMarker.currentLocation.latitude, longitude: familyMarker.currentLocation.longitude }}
+              title={familyMarker.username}
+              description={familyMarker.username}
+              tappable={true}
+              onPress={() => console.log('Marker pressed')}
+              tracksViewChanges={false}
+              tracksInfoWindowChanges={false}
+              stopPropagation={true}
+              icon={{uri: familyMarker.avatar_url}}
+            >
+              <Callout tooltip={true} onPress={() => console.log('Callout pressed')}>
+                <View style={{ flex: 1,
+                  padding: 10, 
+                  display: 'flex', 
+                  flexDirection: 'row', 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  backgroundColor:'white',
+                  borderRadius: 20,
+                  shadowColor: 'black',
+                  shadowOffset: { width: 0, height: 2 },
+                  
+                  }}>
+                  <Text>{familyMarker.username}</Text>
+                  <Pressable onPress={() => console.log('Pressed')} style={{
+                    width: 15,
+                    height: 15,
+                  }}>
+                    <Image source={require('./likeButton.png')} style={{ width: 15, height: 15 }} />
+                  </Pressable>
+                </View>
+              </Callout>
+            </Marker>
+          ))
+        }
         {/* <Marker coordinate={{ latitude: 43.032201, longitude: -76.122812 }} /> */}
         {destination &&
           <MapViewDirections
