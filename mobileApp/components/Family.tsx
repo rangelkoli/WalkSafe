@@ -1,21 +1,191 @@
 import { StyleSheet, Text, View, SafeAreaView, Image } from 'react-native'
-import React from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase'
+import { Button, Input } from 'react-native-elements'
+import { Session } from '@supabase/supabase-js'
 
-const Family = () => {
+const Family = ({session}: {session: Session}) => {
+  const [family, setFamily] = useState([]) as any
+  const [friends, setfriends] = useState([]) as any
+
+  const fetchFamily = async () => {
+    const { data: family, error } = await supabase
+      .from('profiles')
+      .select('username, family')
+      .eq('id', session?.user?.id)
+
+    if (family && family.length > 0) {
+      const id = session?.user?.id; // Define the id variable
+
+      const friendsUUIDs = ['f2d4a61d-a345-49d1-98e6-24d61b46aabc', 'fdd5fe65-11dc-4e82-830a-1502b152fc6e']; // Array of UUIDs
+
+      const { data: friends, error: friendsError } = await supabase
+        .from('profiles')
+        .select('username, family, currentLocation, avatar_url')
+        .in('id', friendsUUIDs); // Use 'in' instead of 'containedBy'
+        setfriends(friends);
+      console.log('Friends:', friends);
+
+      console.log('Family:', family);
+      if (error) console.log('Error fetching family:', error);
+      else setFamily(family[0]);
+
+      if (friendsError) {
+        console.log('Error fetching friends:', friendsError);
+      } else if (friends) {
+        console.log('Friends:', friends);
+        setfriends(friends);
+      }
+
+      if (friendsError) {
+        console.log('Error fetching friends:', friendsError);
+      }
+    }
+  }
+  useEffect(() => {
+    fetchFamily()
+  }, [])
+
   return (
-    <SafeAreaView>
-      <Text>Family</Text>
-        <Image
-            style={{ width: 50, height: 50, backgroundColor: 'red'}}
-            source={require('./home.svg')}
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.headingText}>Family</Text>
+        {/* <Image
+            style={{ width: 50, height: 50, }}
+            source={require('./alertDanger.png')}
             width={20}
             height={20}
+        /> */}
 
-        />
+          {/* <Text key={family.username}>{family.username}</Text>
+          <Text key={family.family}>{family.family}</Text> */}
+
+          {/* {
+                    friends && friends.length > 0 && 
+                    <View style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      width: '90%',
+                      padding: 20,
+                      backgroundColor: 'lightgrey',
+                      borderRadius: 10,
+                      margin: 10,
+                    }}>
+                      <Image
+                        width={50} height={50}
+                        source={{uri:'https://uxctabsuocwyfobklkyh.supabase.co/storage/v1/object/sign/avatars/alert-danger-svgrepo-com%20(1).png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhdmF0YXJzL2FsZXJ0LWRhbmdlci1zdmdyZXBvLWNvbSAoMSkucG5nIiwiaWF0IjoxNzEwNjQ3NTgxLCJleHAiOjE3NDIxODM1ODF9.fZh5UvagGV7kA59d2jZXfhQ72pOihZXrvM2np6rR1-E&t=2024-03-17T03%3A53%3A01.158Z'}}
+                        />
+                      <Text key={friends[0].username}>{friends[0].username}</Text>
+                      <View style={{
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}>
+                      <Text key={"CurrentLocationLAT"}>{friends[0].currentLocation.latitude},</Text>
+                      <Text key={"CurrentLocationLNG"}>{friends[0].currentLocation.longitude}</Text> 
+                      </View>
+                    </View>
+
+          } */}
+
+      {
+        friends && friends.length > 0 ?
+        
+
+
+        friends.map((friend: any) => {
+          return (
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '90%',
+              padding: 20,
+              backgroundColor: 'lightgrey',
+              borderRadius: 10,
+              margin: 10,
+              shadowColor: 'black',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.8,
+            }}>
+              <Image
+                width={50} height={50}
+                source={{uri: friend.avatar_url}}
+                style={{ width: 50, height: 50, }}  
+                />
+              <Text key={friend.username} style={{
+                fontSize: 20,
+                fontWeight: 'bold',
+                color: 'black',
+                margin: 5,
+              
+              }}>{friend.username}</Text>
+              <View style={{
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+               <Text style={{
+                  fontSize: 12,
+                  fontWeight: 'bold',
+                  color: 'black',
+                  margin: 5,
+
+               }}> Current Coordinates:</Text>
+              <Text key={friend.username + "LAT"}>{friend.currentLocation.latitude},</Text>
+              <Text key={friend.username + "LNG"}>{friend.currentLocation.longitude}</Text>
+              </View>
+            </View> 
+          )
+        }):
+        <Text>No friends found</Text>
+
+//       <View style={{
+//         flexDirection: 'row',
+//         justifyContent: 'space-between',
+//         alignItems: 'center',
+//         width: '90%',
+//         padding: 20,
+//         backgroundColor: 'lightgrey',
+//         borderRadius: 10,
+//         margin: 10,
+
+//       }}>
+//         <Image
+//           width={50} height={50}
+//           source={{uri:'https://uxctabsuocwyfobklkyh.supabase.co/storage/v1/object/sign/avatars/alert-danger-svgrepo-com%20(1).png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhdmF0YXJzL2FsZXJ0LWRhbmdlci1zdmdyZXBvLWNvbSAoMSkucG5nIiwiaWF0IjoxNzEwNjQ3NTgxLCJleHAiOjE3NDIxODM1ODF9.fZh5UvagGV7kA59d2jZXfhQ72pOihZXrvM2np6rR1-E&t=2024-03-17T03%3A53%3A01.158Z'}}
+//           />
+//         <Text key={friends.data[0].username}>{friends.data[0].username}</Text>
+//         <View style={{
+//           flexDirection: 'column',
+//           justifyContent: 'space-between',
+//           alignItems: 'center',
+//         }}>
+//         <Text key={"CurrentLocationLAT"}>{friends.data[0].currentLocation.latitude},</Text>
+//         <Text key={"CurrentLocationLNG"}>{friends.data[0].currentLocation.longitude}</Text>
+// </View>
+
+
+
+//       </View>
+
+        }
     </SafeAreaView>
   )
 }
 
 export default Family
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    alignItems: 'center',
+  },
+  headingText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    margin: 20,
+
+  },
+})

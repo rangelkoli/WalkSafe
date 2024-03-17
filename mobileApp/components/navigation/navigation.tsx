@@ -9,8 +9,6 @@ import AddAlert from '../AddAlert';
 import Family from '../Family';
 import { Image, View, Platform } from 'react-native';
 
-
-
 const Tab = createMaterialBottomTabNavigator();
 
 export default function BottomNavigation(
@@ -48,7 +46,7 @@ export default function BottomNavigation(
         >
         <Tab.Screen 
             name="Home" 
-            component={Maps} 
+            children={()=><Maps session={session} />}
             options={{
                 tabBarLabel: 'Home',
                 tabBarColor: 'red',
@@ -71,7 +69,7 @@ export default function BottomNavigation(
             />
         <Tab.Screen
             name="Family"
-            component={Family}
+            children={()=> <Family session={session} />}
             options={{
                 tabBarLabel: 'Family',
                 tabBarIcon: ({ color }) => {
