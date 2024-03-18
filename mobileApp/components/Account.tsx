@@ -9,6 +9,7 @@ export default function Account({ session }: { session: Session }) {
   const [username, setUsername] = useState('')
   const [website, setWebsite] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [homeLocation, setHomeLocation] = useState({lat: 43.032201, long: -76.122812})
 
   useEffect(() => {
     if (session) getProfile()
@@ -21,7 +22,7 @@ export default function Account({ session }: { session: Session }) {
 
       const { data, error, status } = await supabase
         .from('profiles')
-        .select(`username, website, avatar_url`)
+        .select(`username, website, avatar_url, homeLocation`)
         .eq('id', session?.user.id)
         .single()
       if (error && status !== 406) {
@@ -32,6 +33,7 @@ export default function Account({ session }: { session: Session }) {
         setUsername(data.username)
         setWebsite(data.website)
         setAvatarUrl(data.avatar_url)
+        setHomeLocation(data.homeLocation)
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -91,6 +93,9 @@ export default function Account({ session }: { session: Session }) {
       <View style={styles.verticallySpaced}>
         <Input label="Username" value={username || ''} onChangeText={(text) => setUsername(text)} />
       </View>
+      <View style={styles.verticallySpaced}>
+        <Input label="Home Location" value={homeLocation.lat + ', ' + homeLocation.long} disabled />
+      </View>
 
 
       <View style={[styles.verticallySpaced, styles.mt20]}>
@@ -100,6 +105,7 @@ export default function Account({ session }: { session: Session }) {
           disabled={loading}
         />
       </View>
+
 
       <View style={styles.verticallySpaced}>
         <Button title="Sign Out" onPress={() => supabase.auth.signOut()} />

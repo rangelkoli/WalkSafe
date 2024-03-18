@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, SafeAreaView, Image, TextInput } from 'react-native'
+import { StyleSheet, Text, View, SafeAreaView, Image, TextInput, ScrollView } from 'react-native'
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { Button, Input } from 'react-native-elements'
@@ -181,6 +181,8 @@ const Family = ({session}: {session: Session}) => {
         placeholder="Enter your family's Email"
         value={emailInput}
         onChangeText={handleInputChange}
+        clearTextOnFocus={true}
+
         />
         <Button 
         title="Add to Family" 

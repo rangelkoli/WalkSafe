@@ -30,7 +30,7 @@ export default function Maps({ session }: { session: Session}) {
   const [destination, setDestination] = useState('')
   const [destinationLatLng, setDestinationLatLng] = useState({ lat: 0, lng: 0 })
   const [latlngDelta, setLatlngDelta] = useState({ latitudeDelta: 0.095, longitudeDelta: 0.045 })
-  const [markers, setMarkers] = useState<{ latitude: number, longitude: number, alert:string }[]>([]) // Add state variable for markers
+  const [markers, setMarkers] = useState<{ latitude: number, longitude: number, alert:string, likes:number }[]>([]) // Add state variable for markers
   const [familyMarkers, setFamilyMarkers] = useState<[{}]>([{
     username: '',
     currentLocation: { latitude: 0, longitude: 0 },
@@ -42,14 +42,15 @@ export default function Maps({ session }: { session: Session}) {
   const getMarkers = () => {
     supabase
       .from('alerts')
-      .select('latitude, longitude, alert')
+      .select('latitude, longitude, alert, likes')
       .then(({ data: alerts, error }) => {
         if (error) console.log('Error fetching alerts:', error)
         else {
           const newMarkers = alerts.map((alert: any) => ({
             latitude: alert.latitude,
             longitude: alert.longitude,
-            alert: alert.alert
+            alert: alert.alert,
+            likes: alert.likes
           }))
           setMarkers(prevMarkers => [...prevMarkers, ...newMarkers])
         }
@@ -163,6 +164,13 @@ const location = async () => {
     //   .catch(function (error) {
     //     console.log(error);
     //   });
+  }
+
+  const increaseLikes = async (alert: string) => {
+    const { data, error } = await supabase
+      .from('alerts')
+      .update({ likes: 1 })
+      .eq('alert', alert)
   }
   return (
     <View style={{ flex: 1, display: 'flex' }}>
@@ -329,21 +337,42 @@ const location = async () => {
             >
               <Callout tooltip={true} onPress={() => console.log('Callout pressed')}>
                 <View style={{ flex: 1,
-                  padding: 10, 
+                  padding: 5, 
                   display: 'flex', 
-                  flexDirection: 'row', 
+                  flexDirection: 'column', 
                   justifyContent: 'center', 
                   alignItems: 'center', 
                   backgroundColor:'white',
                   borderRadius: 20,
                   shadowColor: 'black',
                   shadowOffset: { width: 0, height: 2 },
+                  gap: 10,
                   
                   }}>
                   <Text>Alert</Text>
-                  <Pressable onPress={() => console.log('Pressed')}>
-                    <Image source={require('./likeButton.png')} style={{ width: 15, height: 15 }} />
+                  <View style={{ flex: 1,
+                    padding: 5, 
+                    display: 'flex', 
+                    flexDirection: 'row', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    backgroundColor:'white',
+                    borderRadius: 20,
+                    shadowColor: 'black',
+                    shadowOffset: { width: 0, height: 2 },
+                    gap: 10,
+                    
+                    }}>
+                  <Pressable onPress={() => {
+                    increaseLikes(marker.alert)
+                    
+                  }}>
+                  <Image source={require('./likeButton.png')} style={{ padding:10, width: 15, height: 15 }} />
+
                   </Pressable>
+                    <Text>{marker.likes}</Text>
+                  </View>
+
                 </View>
               </Callout>
             </Marker>
