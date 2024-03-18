@@ -82,17 +82,21 @@ const location = async () => {
     console.log('Permission to access location was denied');
     return;
   }
-  let location = await Location.getCurrentPositionAsync({});
-  console.log("currLoc",location.coords.latitude, location.coords.longitude);
-  const lat = location.coords.latitude
-  const lon = location.coords.longitude
-  setCurrentLocation({latitude: lat, longitude: lon})
-  console.log('Current Location:', currentLocation)
+  try {
+    let location = await Location.getCurrentPositionAsync({});
+    console.log("currLoc", location.coords.latitude, location.coords.longitude);
+    const lat = location.coords.latitude;
+    const lon = location.coords.longitude;
+    setCurrentLocation({ latitude: lat, longitude: lon });
+    setValue({ latitude: lat, longitude: lon })
+    console.log('Current Location:', { latitude: lat, longitude: lon });
+  } catch (error) {
+    console.log('Error getting current location:', error);
+  }
 }
   useEffect(() => {
     location()
     getMarkers() // Call getMarkers function once at the start
-    setValue(currentLocation)
     getFamilyMarkers()
     getHeatMapMarkers()
 
