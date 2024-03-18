@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
-import { StyleSheet, View, Alert } from 'react-native'
+import { StyleSheet, View, Alert, Image } from 'react-native'
 import { Button, Input } from 'react-native-elements'
 import { Session } from '@supabase/supabase-js'
 
@@ -79,15 +79,19 @@ export default function Account({ session }: { session: Session }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.verticallySpaced}>
+        <Image
+          source={{ uri: avatarUrl }} // or use require('./path/to/image.png')
+          style={{ width: 100, height: 100, borderRadius: 50, alignSelf: 'center'}}
+        />
+      </View>
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Input label="Email" value={session?.user?.email} disabled />
       </View>
       <View style={styles.verticallySpaced}>
         <Input label="Username" value={username || ''} onChangeText={(text) => setUsername(text)} />
       </View>
-      <View style={styles.verticallySpaced}>
-        <Input label="Website" value={website || ''} onChangeText={(text) => setWebsite(text)} />
-      </View>
+
 
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Button

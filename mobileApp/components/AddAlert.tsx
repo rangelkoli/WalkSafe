@@ -61,7 +61,7 @@ const AddAlert = ({session }: {session: Session}) => {
 
                 />
             <View style={styles.radioContainer}>
-            <ToggleButton.Group
+            {/* <ToggleButton.Group
                 onValueChange={value => setValue(value)}
                 value={value}
                 children={alertTypes.map((type) => (
@@ -80,7 +80,18 @@ const AddAlert = ({session }: {session: Session}) => {
 
                     />
                 ))}
-            />
+            /> */}
+            {alertTypes.map((type) => (
+                <View style={styles.radioItems}>
+                    <Text>{type.type}</Text>
+                    <RadioButton
+                        value={type.type}
+                        status={value === type.type ? 'checked' : 'unchecked'}
+                        onPress={() => setValue(type.type)}
+
+                    />
+                </View>
+            ))}
             </View>
             </View>
             <Button 

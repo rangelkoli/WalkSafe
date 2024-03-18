@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, SafeAreaView, Image } from 'react-native'
+import { StyleSheet, Text, View, SafeAreaView, Image, TextInput } from 'react-native'
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { Button, Input } from 'react-native-elements'
@@ -7,6 +7,7 @@ import { Session } from '@supabase/supabase-js'
 const Family = ({session}: {session: Session}) => {
   const [family, setFamily] = useState([]) as any
   const [friends, setfriends] = useState([]) as any
+  const [emailInput, setEmailInput] = useState('') as any
 
   const fetchFamily = async () => {
     const { data: family, error } = await supabase
@@ -45,6 +46,10 @@ const Family = ({session}: {session: Session}) => {
   useEffect(() => {
     fetchFamily()
   }, [])
+
+  const handleInputChange = (text: string) => {
+    setEmailInput(text)
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -170,6 +175,17 @@ const Family = ({session}: {session: Session}) => {
 //       </View>
 
         }
+      <View style={styles.inputContainer}>
+        <TextInput 
+        style={styles.input} 
+        placeholder="Enter your family's Email"
+        value={emailInput}
+        onChangeText={handleInputChange}
+        />
+        <Button 
+        title="Add to Family" 
+        />
+      </View>
     </SafeAreaView>
   )
 }
@@ -187,5 +203,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     margin: 20,
 
+  },
+  inputContainer: {
+    width: '90%',
+    bottom: 0,
+    position: 'absolute',
+  },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    width: '100%',
   },
 })

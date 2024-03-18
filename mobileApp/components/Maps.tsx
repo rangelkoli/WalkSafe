@@ -25,6 +25,7 @@ const mapCustomStyle = [ { "elementType": "geometry", "stylers": [ { "color": "#
 
 export default function Maps({ session }: { session: Session}) {
 
+  const [currentLocationAsString, setCurrentLocationAsString] = useState('')
   const [currentLocation, setCurrentLocation] = useState({ latitude: 43.032201, longitude: -76.122812 })
   const [destination, setDestination] = useState('')
   const [destinationLatLng, setDestinationLatLng] = useState({ lat: 0, lng: 0 })
@@ -55,6 +56,14 @@ export default function Maps({ session }: { session: Session}) {
       })
   }
   const updateLocationDB = async () => {
+    Geocoder.from(currentLocation)
+		.then(json => {
+        		var addressComponent = json.results[0].formatted_address;
+			console.log("Address", addressComponent);
+      setCurrentLocationAsString(addressComponent)
+
+		})
+		.catch(error => console.warn(error));
     const { data, error } = await supabase
       .from('profiles')
       .update({ currentLocation: currentLocation })
@@ -130,14 +139,30 @@ const location = async () => {
 		})
 		.catch(error => console.warn(error)); 
     setDestination(destination)
-    axios.get('http://127.0.0.1:5000/route')
+
+    
+    console.log('Current Location:', currentLocation)
+    console.log('Destination:', destination)
+
+    axios.post('http://192.168.1.196:5000/route', {
+      origin: currentLocationAsString,
+      destination: destination,
+    })
       .then(function (response) {
-        console.log(response.data);
-        setPolylineCoordinates(response.data)
+        console.log("ROUTE:", response.data);
+        // setPolylineCoordinates(response.data[0])
       })
       .catch(function (error) {
         console.log(error);
       });
+    // axios.get('http://192.168.1.196:5000/route')
+    //   .then(function (response) {
+    //     console.log("ROUTE:", response.data);
+    //     setPolylineCoordinates(response.data[0])
+    //   })
+    //   .catch(function (error) {
+    //     console.log(error);
+    //   });
   }
   return (
     <View style={{ flex: 1, display: 'flex' }}>
@@ -195,9 +220,13 @@ const location = async () => {
               tracksViewChanges={false}
               tracksInfoWindowChanges={false}
               stopPropagation={true}
-              icon={{uri: familyMarker.avatar_url}}
+              icon={require('./batman175.png')}
+              
+
             >
-              <Callout tooltip={true} onPress={() => console.log('Callout pressed')}>
+              <Callout tooltip={true} onPress={() => console.log('Callout pressed')} style={{
+
+              }}>
                 <View style={{ flex: 1,
                   padding: 10, 
                   display: 'flex', 
@@ -208,14 +237,14 @@ const location = async () => {
                   borderRadius: 20,
                   shadowColor: 'black',
                   shadowOffset: { width: 0, height: 2 },
+
                   
                   }}>
                   <Text>{familyMarker.username}</Text>
                   <Pressable onPress={() => console.log('Pressed')} style={{
-                    width: 15,
-                    height: 15,
+
                   }}>
-                    <Image source={require('./likeButton.png')} style={{ width: 15, height: 15 }} />
+
                   </Pressable>
                 </View>
               </Callout>
@@ -223,7 +252,7 @@ const location = async () => {
           ))
         }
         {/* <Marker coordinate={{ latitude: 43.032201, longitude: -76.122812 }} /> */}
-        {destination &&
+        {/* {destination &&
           <MapViewDirections
             origin={currentLocation}
             destination={destination}
@@ -258,12 +287,14 @@ const location = async () => {
             region='us-east-1'
             
           />
-        }
+        } */}
         {destination &&
           <Polyline
             coordinates={polylineCoordinates}
             strokeColor="hotpink" // fallback for when `strokeColors` is not supported by the map-provider
             strokeWidth={3}
+            removeClippedSubviews={true}
+            pointerEvents='auto'
           />
         }
         {
