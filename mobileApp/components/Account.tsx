@@ -9,7 +9,7 @@ export default function Account({ session }: { session: Session }) {
   const [username, setUsername] = useState('')
   const [website, setWebsite] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
-  const [homeLocation, setHomeLocation] = useState({lat: 43.032201, long: -76.122812})
+  const [homeLocation, setHomeLocation] = useState('')
 
   useEffect(() => {
     if (session) getProfile()
@@ -94,7 +94,7 @@ export default function Account({ session }: { session: Session }) {
         <Input label="Username" value={username || ''} onChangeText={(text) => setUsername(text)} />
       </View>
       <View style={styles.verticallySpaced}>
-        <Input label="Home Location" value={homeLocation.lat + ', ' + homeLocation.long} disabled />
+        <Input label="Home Location" value={homeLocation} disabled />
       </View>
 
 

@@ -19,7 +19,7 @@ const AddAlert = ({session }: {session: Session}) => {
         {type: 'other', icon: 'alert-circle'}
     ]
     const [user, setUser] = useState({}) as any
-    const [ currentLocation, setCurrentLocation ] = useState({latitude: 43.032201, longitude: -76.122812})
+    const [ currentLocation, setCurrentLocation ] = useState({latitude: 0, longitude: 0})
 
     useEffect(() => {
         const currLoc = getLatestValue()

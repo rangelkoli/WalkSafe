@@ -5,7 +5,7 @@ import Auth from './Auth'
 import Account from './Account'
 import { SafeAreaView, View, Text, Pressable } from 'react-native'
 import { Session } from '@supabase/supabase-js'
-import MapView, { Marker, PROVIDER_GOOGLE, Callout,Polyline } from 'react-native-maps'
+import MapView, { Marker, PROVIDER_GOOGLE, Callout,Polyline, Heatmap } from 'react-native-maps'
 import SearchBar from './searchbar'
 import MapViewDirections from 'react-native-maps-directions';
 import googleAPIKEY from './lib/googleAPIKEY'
@@ -26,7 +26,10 @@ const mapCustomStyle = [ { "elementType": "geometry", "stylers": [ { "color": "#
 export default function Maps({ session }: { session: Session}) {
 
   const [currentLocationAsString, setCurrentLocationAsString] = useState('')
-  const [currentLocation, setCurrentLocation] = useState({ latitude: 43.032201, longitude: -76.122812 })
+  const [currentLocation, setCurrentLocation] = useState<{latitude: number, longitude: number }>({
+    latitude: 43.032201,
+    longitude: -76.122812
+  })
   const [destination, setDestination] = useState('')
   const [destinationLatLng, setDestinationLatLng] = useState({ lat: 0, lng: 0 })
   const [latlngDelta, setLatlngDelta] = useState({ latitudeDelta: 0.095, longitudeDelta: 0.045 })
@@ -80,17 +83,18 @@ const location = async () => {
     return;
   }
   let location = await Location.getCurrentPositionAsync({});
-  console.log(location);
-  setCurrentLocation({latitude: location.coords.latitude, longitude: location.coords.longitude})
+  console.log("currLoc",location.coords.latitude, location.coords.longitude);
+  const lat = location.coords.latitude
+  const lon = location.coords.longitude
+  setCurrentLocation({latitude: lat, longitude: lon})
   console.log('Current Location:', currentLocation)
 }
-
-
   useEffect(() => {
     location()
     getMarkers() // Call getMarkers function once at the start
     setValue(currentLocation)
     getFamilyMarkers()
+    getHeatMapMarkers()
 
     const interval = setInterval(() => {
       getMarkers()
@@ -126,8 +130,7 @@ const location = async () => {
         .select('username, family, currentLocation, avatar_url')
         .in('id', friendsUUIDs); // Use 'in' instead of 'containedBy'
         setFamilyMarkers(friends);
-      console.log('Friends:', friends);
-      console.log('Family:', family);
+
     }
   }
 
@@ -151,7 +154,7 @@ const location = async () => {
     })
       .then(function (response) {
         console.log("ROUTE:", response.data);
-        // setPolylineCoordinates(response.data[0])
+        setPolylineCoordinates(response.data[0])
       })
       .catch(function (error) {
         console.log(error);
@@ -172,6 +175,24 @@ const location = async () => {
       .update({ likes: 1 })
       .eq('alert', alert)
   }
+// Heatmap Markers
+const [heatMapMarkers, setHeatMapMarkers] = useState<any>([
+
+])
+
+const getHeatMapMarkers = async () => {
+  try {
+    const response = await axios.get('http://192.168.1.196:5000/crimeData');
+    console.log("HEATMAP MARKERS:", response.data);
+    setHeatMapMarkers(response.data);
+    console.log('Heatmap Markers:', response.data);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+
+
   return (
     <View style={{ flex: 1, display: 'flex' }}>
       <SafeAreaView style={{
@@ -205,7 +226,6 @@ const location = async () => {
           setRegion(region)
         }
         }
-        
         role='alert'
         showsUserLocation={true}
         showsMyLocationButton={true}
@@ -215,6 +235,20 @@ const location = async () => {
         cacheEnabled={true}
         mapType='standard'  
       >
+        {
+          heatMapMarkers.length > 0 &&
+          <Heatmap
+            points={heatMapMarkers}
+            opacity={1}
+            radius={40}
+            gradient={{
+              colors: ["#00FF00", "#FF0000"],
+              startPoints: [0.001, 0.8],
+              colorMapSize: 256
+            }}
+
+          />
+        }
         {
           familyMarkers.length > 0 &&
           familyMarkers.map((familyMarker: any, index: number) => (
@@ -260,7 +294,7 @@ const location = async () => {
           ))
         }
         {/* <Marker coordinate={{ latitude: 43.032201, longitude: -76.122812 }} /> */}
-        {/* {destination &&
+        {destination &&
           <MapViewDirections
             origin={currentLocation}
             destination={destination}
@@ -295,8 +329,8 @@ const location = async () => {
             region='us-east-1'
             
           />
-        } */}
-        {destination &&
+        }
+        {/* {destination &&
           <Polyline
             coordinates={polylineCoordinates}
             strokeColor="hotpink" // fallback for when `strokeColors` is not supported by the map-provider
@@ -304,7 +338,7 @@ const location = async () => {
             removeClippedSubviews={true}
             pointerEvents='auto'
           />
-        }
+        } */}
         {
           destination && 
           <Marker
@@ -365,6 +399,8 @@ const location = async () => {
                     }}>
                   <Pressable onPress={() => {
                     increaseLikes(marker.alert)
+                    supabase.from('alerts').update({ likes: marker.likes + 1 }).eq('alert', marker.alert)
+                    marker.likes += 1
                     
                   }}>
                   <Image source={require('./likeButton.png')} style={{ padding:10, width: 15, height: 15 }} />

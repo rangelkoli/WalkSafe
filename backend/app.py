@@ -10,6 +10,20 @@ app = Flask(__name__)
 
 data = pd.read_csv('allCrimeData.csv')
 
+data.rename(columns={'LAT': 'latitude', 'LONG': 'longitude'}, inplace=True)
+
+
+@app.route('/crimeData', methods=['GET', 'POST'])
+def crimeDataHeatmapDetails():
+    data.rename(columns={'LAT': 'latitude', 'LONG': 'longitude', 'CRIME_WEIGHT': 'weight'}, inplace=True)
+    smallCrimes = data[data['weight'] < 100]
+    mediumCrimes = data[(data['weight'] >= 100) & (data['weight'] < 500)]
+    largeCrimes = data[data['weight'] >= 500]
+    print("Small Crimes", smallCrimes)
+    return largeCrimes[['latitude', 'longitude', 'weight' ]].to_json(orient='records')
+
+
+
 @app.route('/')
 def hello():
     return 'Hello, World!'
@@ -55,12 +69,11 @@ def get_route(origin, destination, api_key):
 
 
     coordinates.append({'latitude': routes[-1]['end_location']['lat'], 'longitude': routes[-1]['end_location']['lng']})
-    if pathGoesThoughCrime(data, routes) == True:
-        print("Path goes through crime")
-    else:
-        print("Path does not go through crime")
-    return result
-    #return [coordinates, result]
+    # Append the ending coordinates of the location to the coordinates
+    print("Coordinates", coordinates)
+
+    #return result
+    return [coordinates, result]
 
 
 @app.route('/route', methods=['GET', 'POST'])
