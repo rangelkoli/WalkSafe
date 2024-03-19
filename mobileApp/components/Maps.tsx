@@ -55,7 +55,7 @@ export default function Maps({ session }: { session: Session}) {
             alert: alert.alert,
             likes: alert.likes
           }))
-          setMarkers(prevMarkers => [...prevMarkers, ...newMarkers])
+          setMarkers(newMarkers)
         }
       })
   }
@@ -116,7 +116,7 @@ const location = async () => {
     updateLocationDB()
     const interval = setInterval(() => {
       updateLocationDB()
-    }, 60000) // Update Location every 1 min
+    }, 30000) // Update Location every 1 min
     return () => {
       clearInterval(interval)
     }
@@ -243,11 +243,11 @@ const getHeatMapMarkers = async () => {
           heatMapMarkers.length > 0 &&
           <Heatmap
             points={heatMapMarkers}
-            opacity={1}
-            radius={40}
+            opacity={0.7}
+            radius={50}
             gradient={{
-              colors: ["#00FF00", "#FF0000"],
-              startPoints: [0.001, 0.8],
+              colors: ['#0000FF',  '#00FF00', '#FF0000', '#FF0000'],
+              startPoints: [0.001, 0.1, 0.5, 0.9],
               colorMapSize: 256
             }}
 

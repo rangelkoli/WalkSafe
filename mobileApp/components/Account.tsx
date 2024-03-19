@@ -48,10 +48,12 @@ export default function Account({ session }: { session: Session }) {
     username,
     website,
     avatar_url,
+    homeLocation,
   }: {
     username: string
     website: string
     avatar_url: string
+    homeLocation: string
   }) {
     try {
       setLoading(true)
@@ -62,6 +64,7 @@ export default function Account({ session }: { session: Session }) {
         username,
         website,
         avatar_url,
+        homeLocation,
         updated_at: new Date(),
       }
 
@@ -94,14 +97,15 @@ export default function Account({ session }: { session: Session }) {
         <Input label="Username" value={username || ''} onChangeText={(text) => setUsername(text)} />
       </View>
       <View style={styles.verticallySpaced}>
-        <Input label="Home Location" value={homeLocation} disabled />
+        <Input label="Home Location" value={homeLocation} 
+          onChangeText={(text) => setHomeLocation(text)} />
       </View>
 
 
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Button
           title={loading ? 'Loading ...' : 'Update'}
-          onPress={() => updateProfile({ username, website, avatar_url: avatarUrl })}
+          onPress={() => updateProfile({ username, website, avatar_url: avatarUrl, homeLocation })}
           disabled={loading}
         />
       </View>

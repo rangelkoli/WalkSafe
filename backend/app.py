@@ -20,7 +20,7 @@ def crimeDataHeatmapDetails():
     mediumCrimes = data[(data['weight'] >= 100) & (data['weight'] < 500)]
     largeCrimes = data[data['weight'] >= 500]
     print("Small Crimes", smallCrimes)
-    return largeCrimes[['latitude', 'longitude', 'weight' ]].to_json(orient='records')
+    return data[['latitude', 'longitude', 'weight' ]].to_json(orient='records')
 
 
 
