@@ -152,7 +152,7 @@ const location = async () => {
     console.log('Current Location:', currentLocation)
     console.log('Destination:', destination)
 
-    axios.post('http://192.168.1.196:5000/route', {
+    axios.post('http://127.0.0.1:5000/route', {
       origin: currentLocationAsString,
       destination: destination,
     })
@@ -186,10 +186,9 @@ const [heatMapMarkers, setHeatMapMarkers] = useState<any>([
 
 const getHeatMapMarkers = async () => {
   try {
-    const response = await axios.get('http://192.168.1.196:5000/crimeData');
-    console.log("HEATMAP MARKERS:", response.data);
+    const response = await axios.get('http://127.0.0.1:5000/crimeData');
+    console.log('HeatMapMarkers:', response.data)
     setHeatMapMarkers(response.data);
-    console.log('Heatmap Markers:', response.data);
   } catch (error) {
     console.log(error);
   }
@@ -263,14 +262,18 @@ const getHeatMapMarkers = async () => {
               description={familyMarker.username}
               tappable={true}
               onPress={() => console.log('Marker pressed')}
-              tracksViewChanges={false}
-              tracksInfoWindowChanges={false}
               stopPropagation={true}
-              icon={require('./batman175.png')}
-              
+
+
 
             >
-              <Callout tooltip={true} onPress={() => console.log('Callout pressed')} style={{
+              <Image source={{ uri: familyMarker.avatar_url }} style={{ width: 50, height: 50, borderRadius: 50 }} onLoadEnd={
+                () => {
+                  console.log('Image loaded')
+                }
+              
+              } />
+              {/* <Callout tooltip={true} onPress={() => console.log('Callout pressed')} style={{
 
               }}>
                 <View style={{ flex: 1,
@@ -293,7 +296,7 @@ const getHeatMapMarkers = async () => {
 
                   </Pressable>
                 </View>
-              </Callout>
+              </Callout> */}
             </Marker>
           ))
         }
@@ -387,7 +390,7 @@ const getHeatMapMarkers = async () => {
                   gap: 10,
                   
                   }}>
-                  <Text>Alert</Text>
+                  <Text>{marker.alert}</Text>
                   <View style={{ flex: 1,
                     padding: 5, 
                     display: 'flex', 
