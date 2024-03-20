@@ -13,14 +13,18 @@ mediumCrimes = pd.read_csv('mediumCrimes.csv')
 largeCrimes = pd.read_csv('largeCrimes.csv')
 
 
-@app.route('/crimeData', methods=['GET', 'POST'])
-def crimeDataHeatmapDetails():
-
-
+@app.route('/crimeDataSmall', methods=['GET', 'POST'])
+def crimeDataHeatmapDetailsS():
     print("Small Crimes", smallCrimes)
+    return smallCrimes[['latitude', 'longitude' ]].to_json(orient='records')
+@app.route('/crimeDataMedium', methods=['GET', 'POST'])
+def crimeDataHeatmapDetailsM():
+    print("Medium Crimes", mediumCrimes)
     return mediumCrimes[['latitude', 'longitude' ]].to_json(orient='records')
-
-
+@app.route('/crimeDataLarge', methods=['GET', 'POST'])
+def crimeDataHeatmapDetailsL():
+    print("Large Crimes", largeCrimes)
+    return largeCrimes[['latitude', 'longitude' ]].to_json(orient='records')
 
 @app.route('/')
 def hello():

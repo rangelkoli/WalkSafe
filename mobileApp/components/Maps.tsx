@@ -307,13 +307,28 @@ export default function Maps({ session }: { session: Session }) {
       .eq("alert", alert);
   };
   // Heatmap Markers
-  const [heatMapMarkers, setHeatMapMarkers] = useState<any>([]);
+  const [heatMapMarkersS, setHeatMapMarkersS] = useState<any>([]);
+  const [heatMapMarkersM, setHeatMapMarkersM] = useState<any>([]);
+  const [heatMapMarkersL, setHeatMapMarkersL] = useState<any>([]);
 
   const getHeatMapMarkers = async () => {
     try {
-      const response = await axios.get("http://192.168.1.196:5000/crimeData");
-      console.log("HeatMapMarkers:", response.data);
-      setHeatMapMarkers(response.data);
+      const responseS = await axios.get(
+        "http://192.168.1.196:5000/crimeDataSmall"
+      );
+
+      console.log("HeatMapMarkers:", responseS.data);
+      setHeatMapMarkersS(responseS.data);
+      const responseM = await axios.get(
+        "http://192.168.1.196:5000/crimeDataMedium"
+      );
+      console.log("HeatMapMarkers:", responseM.data);
+      setHeatMapMarkersM(responseM.data);
+      const responseL = await axios.get(
+        "http://192.168.1.196:5000/crimeDataLarge"
+      );
+      console.log("HeatMapMarkers:", responseL.data);
+      setHeatMapMarkersL(responseL.data);
     } catch (error) {
       console.log(error);
     }
@@ -361,13 +376,37 @@ export default function Maps({ session }: { session: Session }) {
         cacheEnabled={true}
         mapType="standard"
       >
-        {heatMapMarkers.length > 0 && (
+        {heatMapMarkersS.length > 0 && (
           <Heatmap
-            points={heatMapMarkers}
+            points={heatMapMarkersS}
             opacity={0.5}
             radius={25}
             gradient={{
               colors: ["#0000FF"],
+              startPoints: [0.001],
+              colorMapSize: 256,
+            }}
+          />
+        )}
+        {heatMapMarkersM.length > 0 && (
+          <Heatmap
+            points={heatMapMarkersM}
+            opacity={0.5}
+            radius={25}
+            gradient={{
+              colors: ["#00FF00"],
+              startPoints: [0.001],
+              colorMapSize: 256,
+            }}
+          />
+        )}
+        {heatMapMarkersL.length > 0 && (
+          <Heatmap
+            points={heatMapMarkersL}
+            opacity={0.5}
+            radius={25}
+            gradient={{
+              colors: ["#FF0000"],
               startPoints: [0.001],
               colorMapSize: 256,
             }}
