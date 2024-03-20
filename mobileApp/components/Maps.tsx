@@ -112,6 +112,7 @@ const mapCustomStyle = [
 ];
 
 export default function Maps({ session }: { session: Session }) {
+  const [friendsData, setFriendsData] = useState<any>([]);
   const [polylineOverview, setPolylineOverview] = useState<any>("");
   const [currentLocationAsString, setCurrentLocationAsString] = useState("");
   const [currentLocation, setCurrentLocation] = useState<{
@@ -133,11 +134,21 @@ export default function Maps({ session }: { session: Session }) {
   const [markers, setMarkers] = useState<
     { latitude: number; longitude: number; alert: string; likes: number }[]
   >([]); // Add state variable for markers
-  const [familyMarkers, setFamilyMarkers] = useState<[{}]>([
+  const [familyMarkers, setFamilyMarkers] = useState<
+    [
+      {
+        username: string;
+        currentLocation: { latitude: number; longitude: number };
+        avatar_url: string;
+        family: [];
+      }
+    ]
+  >([
     {
       username: "",
       currentLocation: { latitude: 0, longitude: 0 },
       avatar_url: "",
+      family: [],
     },
   ]); // Add state variable for markers
   const [region, setRegion] = useState({
@@ -196,6 +207,7 @@ export default function Maps({ session }: { session: Session }) {
       .from("profiles")
       .update({ currentLocation: currentLocation })
       .eq("id", session?.user?.id);
+
     if (error) console.log("Error updating location:", error);
   };
 
@@ -208,7 +220,6 @@ export default function Maps({ session }: { session: Session }) {
     }
     try {
       let location = await Location.getCurrentPositionAsync({});
-
       const lat = location.coords.latitude;
       const lon = location.coords.longitude;
       setCurrentLocation({ latitude: lat, longitude: lon });
@@ -247,10 +258,13 @@ export default function Maps({ session }: { session: Session }) {
   const getFamilyMarkers = async () => {
     const { data: family, error } = await supabase
       .from("profiles")
-      .select("username, currentLocation, avatar_url")
+      .select("username, currentLocation, avatar_url, family")
       .eq("id", session?.user?.id);
     if (family && family.length > 0) {
       const id = session?.user?.id; // Define the id variable
+      setFriendsData(family[0].family); // Set the friendsData state variable
+      console.log("FAMILY:", family[0].family);
+
       const friendsUUIDs = [
         "f2d4a61d-a345-49d1-98e6-24d61b46aabc",
         "fdd5fe65-11dc-4e82-830a-1502b152fc6e",
@@ -259,7 +273,9 @@ export default function Maps({ session }: { session: Session }) {
         .from("profiles")
         .select("username, family, currentLocation, avatar_url")
         .in("id", friendsUUIDs); // Use 'in' instead of 'containedBy'
-      setFamilyMarkers(friends);
+      if (friends) {
+        setFamilyMarkers(friends);
+      }
     }
   };
 

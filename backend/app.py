@@ -4,6 +4,8 @@ import csv
 import pandas as pd
 import json
 import numpy as np
+import polyline
+from geopy.distance import geodesic
 
 
 app = Flask(__name__)
@@ -11,7 +13,7 @@ app = Flask(__name__)
 smallCrimes = pd.read_csv('smallCrimes.csv')
 mediumCrimes = pd.read_csv('mediumCrimes.csv')
 largeCrimes = pd.read_csv('largeCrimes.csv')
-
+goodWaypoints =[(43.038497, -76.180731),(43.041114, -76.169333), (43.034190, -76.168420),(43.025417, -76.160784),(43.023092, -76.145535), (43.022107, -76.150100), (43.044238, -76.138307) ]
 
 @app.route('/crimeDataSmall', methods=['GET', 'POST'])
 def crimeDataHeatmapDetailsS():
@@ -31,6 +33,40 @@ def hello():
     return 'Hello, World!'
 
 
+
+def are_points_on_polyline(points, polyline):
+    polyline = polyline.decode(polyline, 5)
+    newWaypoints = []
+    for point in points:
+        x = point['latitude']
+        y = point['longitude']
+        n = len(polyline)
+        inside = False
+        p1x, p1y = polyline[0]
+        for i in range(n+1):
+            p2x, p2y = polyline[i % n]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+        if inside:
+            res = get_nearest_coordinates(point)
+            newWaypoints.append(res)
+    return newWaypoints
+
+
+def get_nearest_coordinates(point):
+    distances = []
+    for waypoint in goodWaypoints:
+        distance = geodesic(point, waypoint).meters
+        distances.append(distance)
+    nearest_index = distances.index(min(distances))
+    nearest_coordinates = goodWaypoints[nearest_index]
+    return nearest_coordinates
 
 
 
