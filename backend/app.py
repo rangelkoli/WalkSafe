@@ -8,19 +8,17 @@ import numpy as np
 
 app = Flask(__name__)
 
-data = pd.read_csv('allCrimeData.csv')
-
-data.rename(columns={'LAT': 'latitude', 'LONG': 'longitude'}, inplace=True)
+smallCrimes = pd.read_csv('smallCrimes.csv')
+mediumCrimes = pd.read_csv('mediumCrimes.csv')
+largeCrimes = pd.read_csv('largeCrimes.csv')
 
 
 @app.route('/crimeData', methods=['GET', 'POST'])
 def crimeDataHeatmapDetails():
-    data.rename(columns={'LAT': 'latitude', 'LONG': 'longitude', 'CRIME_WEIGHT': 'weight'}, inplace=True)
-    smallCrimes = data[data['weight'] < 100]
-    mediumCrimes = data[(data['weight'] >= 100) & (data['weight'] < 500)]
-    largeCrimes = data[data['weight'] >= 500]
+
+
     print("Small Crimes", smallCrimes)
-    return data[['latitude', 'longitude', 'weight' ]].to_json(orient='records')
+    return mediumCrimes[['latitude', 'longitude' ]].to_json(orient='records')
 
 
 
@@ -29,18 +27,6 @@ def hello():
     return 'Hello, World!'
 
 
-def pathGoesThoughCrime(crimeData, path):
-    print(crimeData)
-    crimeData = crimeData[['LAT', 'LONG']]
-    for route in path:
-        for legs in route['steps']:
-            for crime in crimeData:
-                print("Crime", float(crime["LAT"]), float(crime["LONG"]))
-                print("Legs", legs['start_location']['lat'], legs['start_location']['lng'])
-                # if float(crime['latitude']) > legs['start_location']['lat'] and float(crime['latitude']) < legs['end_location']['lat']:
-                #     if float(crime['longitude']) > legs['start_location']['lng'] and float(crime['longitude']) < legs['end_location']['lng']:
-                #         return True
-    return False
 
 
 
@@ -71,6 +57,7 @@ def get_route(origin, destination, api_key):
     coordinates.append({'latitude': routes[-1]['end_location']['lat'], 'longitude': routes[-1]['end_location']['lng']})
     # Append the ending coordinates of the location to the coordinates
     print("Coordinates", coordinates)
+    
 
     #return result
     return [coordinates, result]
@@ -87,16 +74,59 @@ def route():
     originMain = origin
     destinationMain = destination
     api_key = "AIzaSyAAFSFl1024iEV_upockgRh5GZ7Svpi_Bk"
+
     route_result = get_route(origin, destination, api_key)
+
     return route_result
 
 @app.route('/routeTest', methods=['GET', 'POST'])
 def routeTest():
-    originMain = "966 Lancaster Ave, Syracuse, NY 13210"
+    originMain = {
+        'latitude': 43.0418,
+        'longitude': -76.1361
+    }
     destinationMain = "966 Cumberland Ave, Syracuse, NY 13210"
     api_key = "AIzaSyAAFSFl1024iEV_upockgRh5GZ7Svpi_Bk"
     route_result = get_route(originMain, destinationMain, api_key)
+    
+
     return route_result
 
+def get_route(origin, destination, api_key):
+    print("Origin", origin)
+    print("Destination", destination)
+    originLat = origin['latitude']
+    originLng = origin['longitude']
+
+    url = f"https://maps.googleapis.com/maps/api/directions/json?origin={originLat},{originLng}&destination={destination}&key={api_key}&mode=walking&alternatives=true"
+    response = requests.get(url)
+    result = response.json()
+    print("Result", result)
+    routes = result['routes'][0]['legs']
+    
+    coordinates = []
+    for route in routes:
+        for legs in route['steps']:
+            coordinates.append({ 
+                'latitude': legs['start_location']['lat'], 
+                'longitude': legs['start_location']['lng'] 
+            })
+            coordinates.append({ 
+                'latitude': legs['end_location']['lat'], 
+                'longitude': legs['end_location']['lng'] 
+            })
+    
+    # Check if any of the coordinates in the path intersect with the largeCrimes dataset
+    path_intersects_crimes = False
+    for coordinate in coordinates:
+        if any((largeCrimes['latitude'] == coordinate['latitude']) & (largeCrimes['longitude'] == coordinate['longitude'])):
+            path_intersects_crimes = True
+            break
+    # print("Coordinates", coordinates)
+    # print("Result", result)
+    # print("Path Intersects Crimes", path_intersects_crimes)
+    return result
+    
+    return [coordinates, result, path_intersects_crimes]
 if __name__ == '__main__':
     app.run(host='192.168.1.196', port=3000, debug=True)
