@@ -25,8 +25,10 @@ import axios from "axios";
 import GetLocation from "react-native-get-location";
 import * as Location from "expo-location";
 import { decode, encode } from "@googlemaps/polyline-codec";
+import * as TaskManager from "expo-task-manager";
 
 Geocoder.init(googleAPIKEY); // use a valid API key
+const LOCATION_TASK_NAME = "background-location-task";
 
 const mapCustomStyle = [
   { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
@@ -149,6 +151,23 @@ export default function Maps({ session }: { session: Session }) {
     { latitude: 43.032201, longitude: -76.122812 },
     { latitude: 43.032201, longitude: -76.122812 },
   ]);
+  const requestPermissions = async () => {
+    const { status: foregroundStatus } =
+      await Location.requestForegroundPermissionsAsync();
+    if (foregroundStatus === "granted") {
+      const { status: backgroundStatus } =
+        await Location.requestBackgroundPermissionsAsync();
+      if (backgroundStatus === "granted") {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 1000,
+          distanceInterval: 0,
+          showsBackgroundLocationIndicator: true,
+        });
+      }
+    }
+  };
+
   const getMarkers = () => {
     supabase
       .from("alerts")
@@ -170,7 +189,6 @@ export default function Maps({ session }: { session: Session }) {
     Geocoder.from(currentLocation)
       .then((json) => {
         var addressComponent = json.results[0].formatted_address;
-        console.log("Address", addressComponent);
         setCurrentLocationAsString(addressComponent);
       })
       .catch((error) => console.warn(error));
@@ -179,10 +197,10 @@ export default function Maps({ session }: { session: Session }) {
       .update({ currentLocation: currentLocation })
       .eq("id", session?.user?.id);
     if (error) console.log("Error updating location:", error);
-    else console.log("Location updated:", data);
   };
 
   const location = async () => {
+    requestPermissions();
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       console.log("Permission to access location was denied");
@@ -190,21 +208,17 @@ export default function Maps({ session }: { session: Session }) {
     }
     try {
       let location = await Location.getCurrentPositionAsync({});
-      console.log(
-        "currLoc",
-        location.coords.latitude,
-        location.coords.longitude
-      );
+
       const lat = location.coords.latitude;
       const lon = location.coords.longitude;
       setCurrentLocation({ latitude: lat, longitude: lon });
       setValue({ latitude: lat, longitude: lon });
-      console.log("Current Location:", { latitude: lat, longitude: lon });
     } catch (error) {
       console.log("Error getting current location:", error);
     }
   };
   useEffect(() => {
+    requestPermissions();
     location();
     getMarkers(); // Call getMarkers function once at the start
     getFamilyMarkers();
@@ -212,7 +226,6 @@ export default function Maps({ session }: { session: Session }) {
 
     const interval = setInterval(() => {
       getMarkers();
-      console.log("Current Location From Maps:", currentLocation);
       location();
       getFamilyMarkers();
     }, 10000); // Fetch markers every 1 minute
@@ -222,6 +235,7 @@ export default function Maps({ session }: { session: Session }) {
     };
   }, []);
   useEffect(() => {
+    requestPermissions();
     updateLocationDB();
     const interval = setInterval(() => {
       updateLocationDB();
@@ -254,13 +268,9 @@ export default function Maps({ session }: { session: Session }) {
       .then((json) => {
         setDestinationLatLng(json.results[0].geometry.location);
         var location = json.results[0].geometry.location;
-        console.log(location);
       })
       .catch((error) => console.warn(error));
     setDestination(destination);
-
-    console.log("Current Location:", currentLocation);
-    console.log("Destination:", destination);
 
     axios
       .post("http://192.168.1.196:5000/route", {
@@ -268,12 +278,9 @@ export default function Maps({ session }: { session: Session }) {
         destination: destination,
       })
       .then(function (response) {
-        console.log("ROUTE:", response.data);
-
         const decoded = decode(
           response.data.routes[0].overview_polyline.points
         );
-        console.log("Decoded:", decoded);
         setPolylineCoordinates(
           decoded.map((point: any) => ({
             latitude: point[0],
@@ -317,17 +324,14 @@ export default function Maps({ session }: { session: Session }) {
         "http://192.168.1.196:5000/crimeDataSmall"
       );
 
-      console.log("HeatMapMarkers:", responseS.data);
       setHeatMapMarkersS(responseS.data);
       const responseM = await axios.get(
         "http://192.168.1.196:5000/crimeDataMedium"
       );
-      console.log("HeatMapMarkers:", responseM.data);
       setHeatMapMarkersM(responseM.data);
       const responseL = await axios.get(
         "http://192.168.1.196:5000/crimeDataLarge"
       );
-      console.log("HeatMapMarkers:", responseL.data);
       setHeatMapMarkersL(responseL.data);
     } catch (error) {
       console.log(error);
@@ -429,9 +433,7 @@ export default function Maps({ session }: { session: Session }) {
               <Image
                 source={{ uri: familyMarker.avatar_url }}
                 style={{ width: 50, height: 50, borderRadius: 50 }}
-                onLoadEnd={() => {
-                  console.log("Image loaded");
-                }}
+                onLoadEnd={() => {}}
               />
               {/* <Callout tooltip={true} onPress={() => console.log('Callout pressed')} style={{
 
@@ -599,3 +601,15 @@ export default function Maps({ session }: { session: Session }) {
     </View>
   );
 }
+
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+  if (error) {
+    // Error occurred - check `error.message` for more details.
+    console.log("Error occurred", error.message);
+    return;
+  }
+  if (data) {
+    console.log("Locations", data);
+    // do something with the locations captured in the background
+  }
+});

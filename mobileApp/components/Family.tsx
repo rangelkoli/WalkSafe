@@ -17,12 +17,36 @@ const Family = ({ session }: { session: Session }) => {
   const [family, setFamily] = useState([]) as any;
   const [friends, setfriends] = useState([]) as any;
   const [emailInput, setEmailInput] = useState("") as any;
+  const [checkIn, setCheckIn] = useState(true) as any;
+  const [username, setUsername] = useState("") as any;
+
+  const handleCheckIn = async () => {
+    fetch("https://app.nativenotify.com/api/notification", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer 4 CMRZxI3FQlP7ByH2W2taW",
+      },
+      body: JSON.stringify({
+        appId: 20296,
+        appToken: "4CMRZxI3FQlP7ByH2W2taW",
+        title: `${username} has reached home`,
+        body: "Hi, I have reached Home, Just letting you know",
+        dateSent: Date.now(),
+      }),
+    });
+  };
 
   const fetchFamily = async () => {
     const { data: family, error } = await supabase
       .from("profiles")
-      .select("username, family")
+      .select("username, family, checkIn, username")
       .eq("id", session?.user?.id);
+
+    if (family) {
+      console.log("Family:", family);
+      setUsername(family[0].username);
+    }
 
     if (family && family.length > 0) {
       const id = session?.user?.id; // Define the id variable
@@ -84,7 +108,7 @@ const Family = ({ session }: { session: Session }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.headingText}>Family</Text>
+      <Text style={styles.headingText}>Hi {username}, Your Family:</Text>
       {/* <Image
             style={{ width: 50, height: 50, }}
             source={require('./alertDanger.png')}
@@ -229,6 +253,15 @@ const Family = ({ session }: { session: Session }) => {
         //       </View>
       }
       <View style={styles.inputContainer}>
+        {checkIn ? (
+          <Button
+            title="Check In"
+            onPress={() => {
+              handleCheckIn();
+            }}
+            style={{ marginBottom: 10, borderRadius: 20 }}
+          />
+        ) : null}
         <TextInput
           style={styles.input}
           placeholder="Enter your family's Email"
@@ -251,7 +284,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headingText: {
-    fontSize: 36,
+    fontSize: 24,
     fontWeight: "bold",
     margin: 20,
   },
