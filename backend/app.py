@@ -4,7 +4,7 @@ import csv
 import pandas as pd
 import json
 import numpy as np
-import polyline
+import polyline as pl
 from geopy.distance import geodesic
 
 
@@ -13,7 +13,7 @@ app = Flask(__name__)
 smallCrimes = pd.read_csv('smallCrimes.csv')
 mediumCrimes = pd.read_csv('mediumCrimes.csv')
 largeCrimes = pd.read_csv('largeCrimes.csv')
-goodWaypoints =[(43.038497, -76.180731),(43.041114, -76.169333), (43.034190, -76.168420),(43.025417, -76.160784),(43.023092, -76.145535), (43.022107, -76.150100), (43.044238, -76.138307) ]
+goodWaypoints =[(43.038497, -76.180731),(43.041114, -76.169333), (43.034190, -76.168420),(43.025417, -76.160784),(43.023092, -76.145535), (43.022107, -76.150100), (43.044238, -76.138307), (43.028732, -76.113726) ]
 
 @app.route('/crimeDataSmall', methods=['GET', 'POST'])
 def crimeDataHeatmapDetailsS():
@@ -35,11 +35,14 @@ def hello():
 
 
 def are_points_on_polyline(points, polyline):
-    polyline = polyline.decode(polyline, 5)
+    print("Points", points)
+    polyline = pl.decode(polyline)
     newWaypoints = []
     for point in points:
-        x = point['latitude']
-        y = point['longitude']
+        x = point[0]
+        y = point[1]
+        x = float(x)
+        y = float(y)
         n = len(polyline)
         inside = False
         p1x, p1y = polyline[0]
@@ -54,8 +57,18 @@ def are_points_on_polyline(points, polyline):
                             inside = not inside
             p1x, p1y = p2x, p2y
         if inside:
+            print("Inside", point)
             res = get_nearest_coordinates(point)
-            newWaypoints.append(res)
+            
+            # Calculate the distance between res and origin
+            distance = geodesic((res[0], res[1]), (x, y)).meters
+            
+            if distance <= 2 * geodesic((43.038497, -76.180731), (43.041114, -76.169333)).meters:
+                print("1-2 roads away")
+                newWaypoints.append(res)
+            else:
+                print("Further away")
+            
     return newWaypoints
 
 
@@ -71,68 +84,6 @@ def get_nearest_coordinates(point):
 
 
 def get_route(origin, destination, api_key):
-    url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&key={api_key}&mode=walking&alternatives=true"
-    response = requests.get(url)
-    result = response.json()
-    print("Result", result)
-    routes = result['routes'][0]['legs']
-
-    coordinates =[]
-    coordinates.append({'latitude': routes[0]['start_location']['lat'], 'longitude': routes[0]['start_location']['lng']})
-    # Append the starting coordinates of the location to the coordinates
-
-    for route in routes:
-        for legs in route['steps']:
-            coordinates.append({ 
-                'latitude': legs['start_location']['lat'], 
-                'longitude': legs['start_location']['lng'] 
-                })
-            coordinates.append({ 
-                'latitude': legs['end_location']['lat'], 
-                'longitude': legs['end_location']['lng'] 
-                })
-            print("Legs", legs['start_location']['lat'], legs['start_location']['lng'])
-
-
-    coordinates.append({'latitude': routes[-1]['end_location']['lat'], 'longitude': routes[-1]['end_location']['lng']})
-    # Append the ending coordinates of the location to the coordinates
-    print("Coordinates", coordinates)
-    
-
-    #return result
-    return [coordinates, result]
-
-
-@app.route('/route', methods=['GET', 'POST'])
-def route():
-    address = request.get_json()
-    origin = address['origin']
-    destination = address['destination']
-    print("Address", address)
-    print("Origin", origin)
-    print("Destination", destination)
-    originMain = origin
-    destinationMain = destination
-    api_key = "AIzaSyAAFSFl1024iEV_upockgRh5GZ7Svpi_Bk"
-
-    route_result = get_route(origin, destination, api_key)
-
-    return route_result
-
-@app.route('/routeTest', methods=['GET', 'POST'])
-def routeTest():
-    originMain = {
-        'latitude': 43.0418,
-        'longitude': -76.1361
-    }
-    destinationMain = "966 Cumberland Ave, Syracuse, NY 13210"
-    api_key = "AIzaSyAAFSFl1024iEV_upockgRh5GZ7Svpi_Bk"
-    route_result = get_route(originMain, destinationMain, api_key)
-    
-
-    return route_result
-
-def get_route(origin, destination, api_key):
     print("Origin", origin)
     print("Destination", destination)
     originLat = origin['latitude']
@@ -143,7 +94,19 @@ def get_route(origin, destination, api_key):
     result = response.json()
     print("Result", result)
     routes = result['routes'][0]['legs']
-    
+    coordinatestoSend = [(43.029396, -76.112694)]
+
+
+    res = are_points_on_polyline(coordinatestoSend, result['routes'][0]['overview_polyline']['points'])
+    if len(res) > 0:        
+        waypoints = "|".join([f"{point[0]},{point[1]}" for point in res])
+        url = f"https://maps.googleapis.com/maps/api/directions/json?origin={originLat},{originLng}&destination={destination}&key={api_key}&mode=walking&alternatives=true&waypoints=optimize:true|{waypoints}"
+        response = requests.get(url)
+        result = response.json()
+        print("Result After Waypoints", result)
+        return result
+
+    return res
     coordinates = []
     for route in routes:
         for legs in route['steps']:
@@ -168,5 +131,36 @@ def get_route(origin, destination, api_key):
     return result
     
     return [coordinates, result, path_intersects_crimes]
+
+
+@app.route('/route', methods=['GET', 'POST'])
+def route():
+    address = request.get_json()
+    origin = address['origin']
+    destination = address['destination']
+    print("Address", address)
+    print("Origin", origin)
+    print("Destination", destination)
+    originMain = origin
+    destinationMain = destination
+    api_key = "AIzaSyAAFSFl1024iEV_upockgRh5GZ7Svpi_Bk"
+
+    route_result = get_route(origin, destination, api_key)
+
+    return route_result
+
+@app.route('/routeTest', methods=['GET', 'POST'])
+def routeTest():
+    originMain = {
+        'latitude': 43.032384, 
+        'longitude': -76.1361
+    }
+    destinationMain = "966 Cumberland Ave, Syracuse, NY 13210"
+    api_key = "AIzaSyAAFSFl1024iEV_upockgRh5GZ7Svpi_Bk"
+    route_result = get_route(originMain, destinationMain, api_key)
+    
+
+    return route_result
+
 if __name__ == '__main__':
     app.run(host='192.168.1.196', port=3000, debug=True)

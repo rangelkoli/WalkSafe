@@ -21,20 +21,10 @@ const Family = ({ session }: { session: Session }) => {
   const [username, setUsername] = useState("") as any;
 
   const handleCheckIn = async () => {
-    fetch("https://app.nativenotify.com/api/notification", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer 4 CMRZxI3FQlP7ByH2W2taW",
-      },
-      body: JSON.stringify({
-        appId: 20296,
-        appToken: "4CMRZxI3FQlP7ByH2W2taW",
-        title: `${username} has reached home`,
-        body: "Hi, I have reached Home, Just letting you know",
-        dateSent: Date.now(),
-      }),
-    });
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ checkIn: true })
+      .eq("id", session?.user?.id);
   };
 
   const fetchFamily = async () => {
@@ -148,110 +138,81 @@ const Family = ({ session }: { session: Session }) => {
 
           } */}
 
-      {
-        friends && friends.length > 0 ? (
-          friends.map((friend: any) => {
-            return (
-              <View
+      {friends && friends.length > 0 ? (
+        friends.map((friend: any) => {
+          return (
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "90%",
+                padding: 20,
+                backgroundColor: "lightgrey",
+                borderRadius: 10,
+                margin: 10,
+                shadowColor: "black",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.8,
+              }}
+            >
+              <Image
+                width={50}
+                height={50}
+                source={{ uri: friend.avatar_url }}
+                style={{ width: 50, height: 50 }}
+              />
+              <Text
+                key={friend.username}
                 style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "90%",
-                  padding: 20,
-                  backgroundColor: "lightgrey",
-                  borderRadius: 10,
-                  margin: 10,
-                  shadowColor: "black",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.8,
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  color: "black",
+                  margin: 5,
                 }}
               >
-                <Image
-                  width={50}
-                  height={50}
-                  source={{ uri: friend.avatar_url }}
-                  style={{ width: 50, height: 50 }}
-                />
+                {friend.username}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <Text
-                  key={friend.username}
                   style={{
-                    fontSize: 20,
+                    fontSize: 12,
                     fontWeight: "bold",
                     color: "black",
                     margin: 5,
                   }}
                 >
-                  {friend.username}
+                  {" "}
+                  Current Coordinates:
                 </Text>
-                <View
-                  style={{
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "bold",
-                      color: "black",
-                      margin: 5,
-                    }}
-                  >
-                    {" "}
-                    Current Coordinates:
-                  </Text>
-                  <Text key={friend.username + "LAT"}>
-                    {friend.currentLocation.latitude},
-                  </Text>
-                  <Text key={friend.username + "LNG"}>
-                    {friend.currentLocation.longitude}
-                  </Text>
-                </View>
-                <Pressable onPress={() => console.log("pressed")}>
-                  <Image
-                    source={require("./cross-svgrepo-com.png")}
-                    style={{
-                      width: 25,
-                      height: 25,
-                    }}
-                  />
-                </Pressable>
+                <Text key={friend.username + "LAT"}>
+                  {friend.currentLocation.latitude},
+                </Text>
+                <Text key={friend.username + "LNG"}>
+                  {friend.currentLocation.longitude}
+                </Text>
               </View>
-            );
-          })
-        ) : (
-          <Text>No friends found</Text>
-        )
-
-        //       <View style={{
-        //         flexDirection: 'row',
-        //         justifyContent: 'space-between',
-        //         alignItems: 'center',
-        //         width: '90%',
-        //         padding: 20,
-        //         backgroundColor: 'lightgrey',
-        //         borderRadius: 10,
-        //         margin: 10,
-
-        //       }}>
-        //         <Image
-        //           width={50} height={50}
-        //           source={{uri:'https://uxctabsuocwyfobklkyh.supabase.co/storage/v1/object/sign/avatars/alert-danger-svgrepo-com%20(1).png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhdmF0YXJzL2FsZXJ0LWRhbmdlci1zdmdyZXBvLWNvbSAoMSkucG5nIiwiaWF0IjoxNzEwNjQ3NTgxLCJleHAiOjE3NDIxODM1ODF9.fZh5UvagGV7kA59d2jZXfhQ72pOihZXrvM2np6rR1-E&t=2024-03-17T03%3A53%3A01.158Z'}}
-        //           />
-        //         <Text key={friends.data[0].username}>{friends.data[0].username}</Text>
-        //         <View style={{
-        //           flexDirection: 'column',
-        //           justifyContent: 'space-between',
-        //           alignItems: 'center',
-        //         }}>
-        //         <Text key={"CurrentLocationLAT"}>{friends.data[0].currentLocation.latitude},</Text>
-        //         <Text key={"CurrentLocationLNG"}>{friends.data[0].currentLocation.longitude}</Text>
-        // </View>
-
-        //       </View>
-      }
+              <Pressable onPress={() => console.log("pressed")}>
+                <Image
+                  source={require("./cross-svgrepo-com.png")}
+                  style={{
+                    width: 25,
+                    height: 25,
+                  }}
+                />
+              </Pressable>
+            </View>
+          );
+        })
+      ) : (
+        <Text>No friends found</Text>
+      )}
       <View style={styles.inputContainer}>
         {checkIn ? (
           <Button

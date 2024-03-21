@@ -210,9 +210,34 @@ export default function Maps({ session }: { session: Session }) {
 
     if (error) console.log("Error updating location:", error);
   };
+  function haversine_distance(
+    mk1: { latitude: number; longitude: number },
+    mk2: { latitude: number; longitude: number }
+  ) {
+    const R = 3958.8; // Radius of the Earth in miles
+    const rlat1 = mk1.latitude * (Math.PI / 180); // Convert degrees to radians
+    const rlat2 = mk2.latitude * (Math.PI / 180); // Convert degrees to radians
+    const difflat = rlat2 - rlat1; // Radian difference (latitudes)
+    const difflon = (mk2.longitude - mk1.longitude) * (Math.PI / 180); // Radian difference (longitudes)
+
+    const d =
+      2 *
+      R *
+      Math.asin(
+        Math.sqrt(
+          Math.sin(difflat / 2) * Math.sin(difflat / 2) +
+            Math.cos(rlat1) *
+              Math.cos(rlat2) *
+              Math.sin(difflon / 2) *
+              Math.sin(difflon / 2)
+        )
+      );
+    return d;
+  }
 
   const location = async () => {
     requestPermissions();
+
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       console.log("Permission to access location was denied");
@@ -224,10 +249,49 @@ export default function Maps({ session }: { session: Session }) {
       const lon = location.coords.longitude;
       setCurrentLocation({ latitude: lat, longitude: lon });
       setValue({ latitude: lat, longitude: lon });
+      const checkInVal = await supabase
+        .from("profiles")
+        .select("checkIn, homeLocationCoordinates, username")
+        .eq("id", session?.user?.id);
+
+      console.log("CHECKIN:", checkInVal);
+
+      if (checkInVal?.data && checkInVal.data[0].checkIn === true) {
+        const username = checkInVal.data[0].username;
+        if (checkInVal.data[0].homeLocationCoordinates) {
+          const homeLocation = checkInVal.data[0].homeLocationCoordinates;
+          const distance = haversine_distance(homeLocation, currentLocation);
+          console.log("Distance:", distance);
+          if (distance < 0.1) {
+            console.log("Home location");
+            fetch("https://app.nativenotify.com/api/notification", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer 4 CMRZxI3FQlP7ByH2W2taW",
+              },
+              body: JSON.stringify({
+                appId: 20296,
+                appToken: "4CMRZxI3FQlP7ByH2W2taW",
+                title: `${username} has reached home`,
+                body: "Hi, I have reached Home, Just letting you know",
+                dateSent: Date.now(),
+              }),
+            });
+            await supabase
+              .from("profiles")
+              .update({ checkIn: false })
+              .eq("id", session?.user?.id);
+          }
+        } else {
+          console.log("No home location");
+        }
+      }
     } catch (error) {
       console.log("Error getting current location:", error);
     }
   };
+
   useEffect(() => {
     requestPermissions();
     location();
