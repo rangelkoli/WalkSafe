@@ -40,16 +40,17 @@ const Family = ({ session }: { session: Session }) => {
 
     if (family && family.length > 0) {
       const id = session?.user?.id; // Define the id variable
+      const familyUUIDs = family[0].family; // Get the family UUIDs
 
-      const friendsUUIDs = [
-        "f2d4a61d-a345-49d1-98e6-24d61b46aabc",
-        "fdd5fe65-11dc-4e82-830a-1502b152fc6e",
-      ]; // Array of UUIDs
+      // const friendsUUIDs = [
+      //   "f2d4a61d-a345-49d1-98e6-24d61b46aabc",
+      //   "fdd5fe65-11dc-4e82-830a-1502b152fc6e",
+      // ]; // Array of UUIDs
 
       const { data: friends, error: friendsError } = await supabase
         .from("profiles")
         .select("username, family, currentLocation, avatar_url")
-        .in("id", friendsUUIDs); // Use 'in' instead of 'containedBy'
+        .in("id", familyUUIDs); // Use 'in' instead of 'containedBy'
       setfriends(friends);
       console.log("Friends:", friends);
 
@@ -142,6 +143,7 @@ const Family = ({ session }: { session: Session }) => {
         friends.map((friend: any) => {
           return (
             <View
+              key={friend.username}
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
