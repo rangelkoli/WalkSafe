@@ -26,7 +26,7 @@ import GetLocation from "react-native-get-location";
 import * as Location from "expo-location";
 import { decode, encode } from "@googlemaps/polyline-codec";
 import * as TaskManager from "expo-task-manager";
-
+import backendURL from "./lib/backendURL";
 Geocoder.init(googleAPIKEY); // use a valid API key
 const LOCATION_TASK_NAME = "background-location-task";
 
@@ -114,7 +114,6 @@ const mapCustomStyle = [
 export default function Maps({ session }: { session: Session }) {
   const [friendsData, setFriendsData] = useState<any>([]);
   const [polylineOverview, setPolylineOverview] = useState<any>("");
-  const [currentLocationAsString, setCurrentLocationAsString] = useState("");
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -200,7 +199,6 @@ export default function Maps({ session }: { session: Session }) {
     Geocoder.from(currentLocation)
       .then((json) => {
         var addressComponent = json.results[0].formatted_address;
-        setCurrentLocationAsString(addressComponent);
       })
       .catch((error) => console.warn(error));
     const { data, error } = await supabase
@@ -234,10 +232,12 @@ export default function Maps({ session }: { session: Session }) {
       );
     return d;
   }
-
+  const [locationRightNow, setLocationRightNow] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
   const location = async () => {
     requestPermissions();
-
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       console.log("Permission to access location was denied");
@@ -245,22 +245,48 @@ export default function Maps({ session }: { session: Session }) {
     }
     try {
       let location = await Location.getCurrentPositionAsync({});
+      console.log("Location:", location);
       const lat = location.coords.latitude;
       const lon = location.coords.longitude;
-      setCurrentLocation({ latitude: lat, longitude: lon });
+      const currLoc = { latitude: lat, longitude: lon };
+      console.log("Current Location:", currLoc);
+      console.log("LocationRightNow:", locationRightNow);
       setValue({ latitude: lat, longitude: lon });
+      setRegion((prevRegion) => ({
+        ...prevRegion,
+        latitude: lat,
+        longitude: lon,
+      }));
       const checkInVal = await supabase
         .from("profiles")
         .select("checkIn, homeLocationCoordinates, username")
         .eq("id", session?.user?.id);
+      await supabase
+        .from("profiles")
+        .update({ currentLocation: currLoc })
+        .eq("id", session?.user?.id);
+      if (checkInVal.data) {
+        console.log("CHECKIN:", checkInVal.data[0].homeLocationCoordinates);
+        console.log("CurrLoc", currentLocation);
+      }
+      const currentLocationValue = await supabase
+        .from("profiles")
+        .select("currentLocation")
+        .eq("id", session?.user?.id);
 
-      console.log("CHECKIN:", checkInVal);
+      if (currentLocationValue.data) {
+        console.log("Current Location DB: ", currentLocationValue.data[0]);
+        setCurrentLocation(currentLocationValue.data[0].currentLocation);
+        console.log("Current Location: Local", currentLocation);
+      }
 
       if (checkInVal?.data && checkInVal.data[0].checkIn === true) {
         const username = checkInVal.data[0].username;
         if (checkInVal.data[0].homeLocationCoordinates) {
           const homeLocation = checkInVal.data[0].homeLocationCoordinates;
-          const distance = haversine_distance(homeLocation, currentLocation);
+          const distance = haversine_distance(homeLocation, currLoc);
+          console.log("Home Location:", homeLocation);
+          console.log("Current Location:", currentLocation);
           console.log("Distance:", distance);
           if (distance < 0.1) {
             console.log("Home location");
@@ -282,6 +308,8 @@ export default function Maps({ session }: { session: Session }) {
               .from("profiles")
               .update({ checkIn: false })
               .eq("id", session?.user?.id);
+          } else {
+            console.log("Not home location");
           }
         } else {
           console.log("No home location");
@@ -310,7 +338,6 @@ export default function Maps({ session }: { session: Session }) {
     };
   }, []);
   useEffect(() => {
-    requestPermissions();
     updateLocationDB();
     const interval = setInterval(() => {
       updateLocationDB();
@@ -328,15 +355,11 @@ export default function Maps({ session }: { session: Session }) {
       const id = session?.user?.id; // Define the id variable
       setFriendsData(family[0].family); // Set the friendsData state variable
       console.log("FAMILY:", family[0].family);
-
-      const friendsUUIDs = [
-        "f2d4a61d-a345-49d1-98e6-24d61b46aabc",
-        "fdd5fe65-11dc-4e82-830a-1502b152fc6e",
-      ]; // Array of UUIDs
+      const familyUUIDs = family[0].family; // Get the family UUIDs
       const { data: friends, error: friendsError } = await supabase
         .from("profiles")
         .select("username, family, currentLocation, avatar_url")
-        .in("id", friendsUUIDs); // Use 'in' instead of 'containedBy'
+        .in("id", familyUUIDs); // Use 'in' instead of 'containedBy'
       if (friends) {
         setFamilyMarkers(friends);
       }
@@ -353,7 +376,7 @@ export default function Maps({ session }: { session: Session }) {
     setDestination(destination);
 
     axios
-      .post("http://192.168.1.196:5000/route", {
+      .post(backendURL + "route", {
         origin: currentLocation,
         destination: destination,
       })
@@ -377,14 +400,6 @@ export default function Maps({ session }: { session: Session }) {
       .catch(function (error) {
         console.log(error);
       });
-    // axios.get('http://192.168.1.196:5000/route')
-    //   .then(function (response) {
-    //     console.log("ROUTE:", response.data);
-    //     setPolylineCoordinates(response.data[0])
-    //   })
-    //   .catch(function (error) {
-    //     console.log(error);
-    //   });
   };
 
   const increaseLikes = async (alert: string) => {
@@ -400,18 +415,12 @@ export default function Maps({ session }: { session: Session }) {
 
   const getHeatMapMarkers = async () => {
     try {
-      const responseS = await axios.get(
-        "http://192.168.1.196:5000/crimeDataSmall"
-      );
+      const responseS = await axios.get(backendURL + "crimeDataSmall");
 
       setHeatMapMarkersS(responseS.data);
-      const responseM = await axios.get(
-        "http://192.168.1.196:5000/crimeDataMedium"
-      );
+      const responseM = await axios.get(backendURL + "crimeDataMedium");
       setHeatMapMarkersM(responseM.data);
-      const responseL = await axios.get(
-        "http://192.168.1.196:5000/crimeDataLarge"
-      );
+      const responseL = await axios.get(backendURL + "crimeDataLarge");
       setHeatMapMarkersL(responseL.data);
     } catch (error) {
       console.log(error);
@@ -472,6 +481,7 @@ export default function Maps({ session }: { session: Session }) {
             }}
           />
         )}
+        {}
         {heatMapMarkersM.length > 0 && (
           <Heatmap
             points={heatMapMarkersM}

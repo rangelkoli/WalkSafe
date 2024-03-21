@@ -216,7 +216,7 @@ const Family = ({ session }: { session: Session }) => {
         <Text>No friends found</Text>
       )}
       <View style={styles.inputContainer}>
-        {checkIn ? (
+        {friends.length ? (
           <Button
             title="Check In"
             onPress={() => {
