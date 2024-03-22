@@ -114,6 +114,8 @@ const mapCustomStyle = [
 ];
 
 export default function Maps({ session }: { session: Session }) {
+  const [distance, setDistance] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [friendsData, setFriendsData] = useState<any>([]);
   const [polylineOverview, setPolylineOverview] = useState<any>("");
   const [currentLocation, setCurrentLocation] = useState<{
@@ -397,7 +399,10 @@ export default function Maps({ session }: { session: Session }) {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         });
+        setDistance(response.data.routes[0].legs[0].distance.text);
+        setDuration(response.data.routes[0].legs[0].duration.text);
       })
+
       .catch(function (error) {
         console.log(error);
       });
@@ -443,6 +448,26 @@ export default function Maps({ session }: { session: Session }) {
         }}
       >
         <SearchBar onSearch={getData} />
+        {distance && duration ? (
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-around",
+              alignItems: "center",
+              backgroundColor: "white",
+              borderRadius: 20,
+              padding: 10,
+              shadowColor: "black",
+              shadowOffset: { width: 0, height: 2 },
+              width: "90%",
+            }}
+          >
+            <Text style={{ color: "black" }}>Distance: {distance} </Text>
+            <Text style={{ color: "black" }}>Time: {duration}</Text>
+          </View>
+        ) : null}
+
         {/* <Button title="Get Location" onPress={() => {
           setMarkers(prevMarkers => [...prevMarkers, { latitude: 43.032201, longitude: -76.122812 }]) // Update markers state with new value
         }} /> */}

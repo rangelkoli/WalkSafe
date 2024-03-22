@@ -32,6 +32,8 @@ goodWaypoints =[
     (43.048704, -76.153679),
     (43.040218, -76.168521),
     (43.039763, -76.159831),
+    (43.036759, -76.120326),
+    (43.037514, -76.122980)
     ]
 
 @app.route('/crimeDataSmall', methods=['GET', 'POST'])
@@ -114,10 +116,8 @@ def get_route(origin, destination, api_key):
     print("Result", result)
     routes = result['routes'][0]['legs']
 
-    coordinatestoSend = [(lat, long) for latitude, longitude in mediumCrimes[['latitude', 'longitude']].values for lat, long in [latitude, longitude]]
-    print("Coordinates to Send", coordinatestoSend)
-
-
+    #coordinatestoSend = [ (latitude, longitude) for latitude, longitude in mediumCrimes[['latitude', 'longitude']].values]
+    coordinatestoSend= [(43.036609, -76.123184)]
     res = are_points_on_polyline(coordinatestoSend, result['routes'][0]['overview_polyline']['points'])
     if len(res) > 0:        
         waypoints = "|".join([f"{point[0]},{point[1]}" for point in res])
