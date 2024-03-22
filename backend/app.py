@@ -13,7 +13,16 @@ app = Flask(__name__)
 smallCrimes = pd.read_csv('smallCrimes.csv')
 mediumCrimes = pd.read_csv('mediumCrimes.csv')
 largeCrimes = pd.read_csv('largeCrimes.csv')
-goodWaypoints =[(43.038497, -76.180731),(43.041114, -76.169333), (43.034190, -76.168420),(43.025417, -76.160784),(43.023092, -76.145535), (43.022107, -76.150100), (43.044238, -76.138307), (43.028732, -76.113726) ]
+goodWaypoints =[
+    (43.038497, -76.180731),
+    (43.041114, -76.169333), 
+    (43.034190, -76.168420),
+    (43.025417, -76.160784),
+    (43.023092, -76.145535), 
+    (43.022107, -76.150100), 
+    (43.044238, -76.138307), 
+    (43.028732, -76.113726) 
+    ]
 
 @app.route('/crimeDataSmall', methods=['GET', 'POST'])
 def crimeDataHeatmapDetailsS():
@@ -106,7 +115,7 @@ def get_route(origin, destination, api_key):
         print("Result After Waypoints", result)
         return result
 
-    return res
+    return result
     coordinates = []
     for route in routes:
         for legs in route['steps']:
