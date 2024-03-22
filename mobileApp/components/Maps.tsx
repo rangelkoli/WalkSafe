@@ -27,6 +27,8 @@ import * as Location from "expo-location";
 import { decode, encode } from "@googlemaps/polyline-codec";
 import * as TaskManager from "expo-task-manager";
 import backendURL from "./lib/backendURL";
+import { formatDistanceToNow } from "date-fns";
+
 Geocoder.init(googleAPIKEY); // use a valid API key
 const LOCATION_TASK_NAME = "background-location-task";
 
@@ -131,7 +133,13 @@ export default function Maps({ session }: { session: Session }) {
     longitudeDelta: 0.045,
   });
   const [markers, setMarkers] = useState<
-    { latitude: number; longitude: number; alert: string; likes: number }[]
+    {
+      latitude: number;
+      longitude: number;
+      alert: string;
+      likes: number;
+      created_at: string;
+    }[]
   >([]); // Add state variable for markers
   const [familyMarkers, setFamilyMarkers] = useState<
     [
@@ -181,7 +189,7 @@ export default function Maps({ session }: { session: Session }) {
   const getMarkers = () => {
     supabase
       .from("alerts")
-      .select("latitude, longitude, alert, likes")
+      .select("latitude, longitude, alert, likes, created_at")
       .then(({ data: alerts, error }) => {
         if (error) console.log("Error fetching alerts:", error);
         else {
@@ -190,6 +198,7 @@ export default function Maps({ session }: { session: Session }) {
             longitude: alert.longitude,
             alert: alert.alert,
             likes: alert.likes,
+            created_at: alert.created_at,
           }));
           setMarkers(newMarkers);
         }
@@ -265,19 +274,14 @@ export default function Maps({ session }: { session: Session }) {
         .from("profiles")
         .update({ currentLocation: currLoc })
         .eq("id", session?.user?.id);
-      if (checkInVal.data) {
-        console.log("CHECKIN:", checkInVal.data[0].homeLocationCoordinates);
-        console.log("CurrLoc", currentLocation);
-      }
+
       const currentLocationValue = await supabase
         .from("profiles")
         .select("currentLocation")
         .eq("id", session?.user?.id);
 
       if (currentLocationValue.data) {
-        console.log("Current Location DB: ", currentLocationValue.data[0]);
         setCurrentLocation(currentLocationValue.data[0].currentLocation);
-        console.log("Current Location: Local", currentLocation);
       }
 
       if (checkInVal?.data && checkInVal.data[0].checkIn === true) {
@@ -285,9 +289,6 @@ export default function Maps({ session }: { session: Session }) {
         if (checkInVal.data[0].homeLocationCoordinates) {
           const homeLocation = checkInVal.data[0].homeLocationCoordinates;
           const distance = haversine_distance(homeLocation, currLoc);
-          console.log("Home Location:", homeLocation);
-          console.log("Current Location:", currentLocation);
-          console.log("Distance:", distance);
           if (distance < 0.1) {
             console.log("Home location");
             fetch("https://app.nativenotify.com/api/notification", {
@@ -654,34 +655,22 @@ export default function Maps({ session }: { session: Session }) {
                 <View
                   style={{
                     flex: 1,
-                    padding: 5,
                     display: "flex",
                     flexDirection: "row",
                     justifyContent: "center",
                     alignItems: "center",
                     backgroundColor: "white",
-                    borderRadius: 20,
-                    shadowColor: "black",
-                    shadowOffset: { width: 0, height: 2 },
-                    gap: 10,
                   }}
                 >
-                  <Pressable
-                    onPress={() => {
-                      increaseLikes(marker.alert);
-                      supabase
-                        .from("alerts")
-                        .update({ likes: marker.likes + 1 })
-                        .eq("alert", marker.alert);
-                      marker.likes += 1;
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "bold",
+                      color: "black",
                     }}
                   >
-                    <Image
-                      source={require("./likeButton.png")}
-                      style={{ padding: 10, width: 15, height: 15 }}
-                    />
-                  </Pressable>
-                  <Text>{marker.likes}</Text>
+                    {formatDistanceToNow(new Date(marker.created_at))} ago
+                  </Text>
                 </View>
               </View>
             </Callout>
@@ -691,15 +680,3 @@ export default function Maps({ session }: { session: Session }) {
     </View>
   );
 }
-
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
-  if (error) {
-    // Error occurred - check `error.message` for more details.
-    console.log("Error occurred", error.message);
-    return;
-  }
-  if (data) {
-    console.log("Locations", data);
-    // do something with the locations captured in the background
-  }
-});

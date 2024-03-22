@@ -113,7 +113,9 @@ def get_route(origin, destination, api_key):
     result = response.json()
     print("Result", result)
     routes = result['routes'][0]['legs']
-    coordinatestoSend = [(43.029396, -76.112694)]
+
+    coordinatestoSend = [(lat, long) for latitude, longitude in mediumCrimes[['latitude', 'longitude']].values for lat, long in [latitude, longitude]]
+    print("Coordinates to Send", coordinatestoSend)
 
 
     res = are_points_on_polyline(coordinatestoSend, result['routes'][0]['overview_polyline']['points'])
