@@ -21,7 +21,17 @@ goodWaypoints =[
     (43.023092, -76.145535), 
     (43.022107, -76.150100), 
     (43.044238, -76.138307), 
-    (43.028732, -76.113726) 
+    (43.028732, -76.113726),
+    (43.042491, -76.083786),
+    (43.055530, -76.112623),
+    (43.059449, -76.094585),
+    (43.052780, -76.123870),
+    (43.044209, -76.134693),
+    (43.042857, -76.145729),
+    (43.045499, -76.149951),
+    (43.048704, -76.153679),
+    (43.040218, -76.168521),
+    (43.039763, -76.159831),
     ]
 
 @app.route('/crimeDataSmall', methods=['GET', 'POST'])
@@ -72,7 +82,7 @@ def are_points_on_polyline(points, polyline):
             # Calculate the distance between res and origin
             distance = geodesic((res[0], res[1]), (x, y)).meters
             
-            if distance <= 2 * geodesic((43.038497, -76.180731), (43.041114, -76.169333)).meters:
+            if distance <= 2 * geodesic((res[0], res[1]), (x, y)).meters:
                 print("1-2 roads away")
                 newWaypoints.append(res)
             else:
@@ -116,30 +126,30 @@ def get_route(origin, destination, api_key):
         return result
 
     return result
-    coordinates = []
-    for route in routes:
-        for legs in route['steps']:
-            coordinates.append({ 
-                'latitude': legs['start_location']['lat'], 
-                'longitude': legs['start_location']['lng'] 
-            })
-            coordinates.append({ 
-                'latitude': legs['end_location']['lat'], 
-                'longitude': legs['end_location']['lng'] 
-            })
+    # coordinates = []
+    # for route in routes:
+    #     for legs in route['steps']:
+    #         coordinates.append({ 
+    #             'latitude': legs['start_location']['lat'], 
+    #             'longitude': legs['start_location']['lng'] 
+    #         })
+    #         coordinates.append({ 
+    #             'latitude': legs['end_location']['lat'], 
+    #             'longitude': legs['end_location']['lng'] 
+    #         })
     
-    # Check if any of the coordinates in the path intersect with the largeCrimes dataset
-    path_intersects_crimes = False
-    for coordinate in coordinates:
-        if any((largeCrimes['latitude'] == coordinate['latitude']) & (largeCrimes['longitude'] == coordinate['longitude'])):
-            path_intersects_crimes = True
-            break
-    # print("Coordinates", coordinates)
-    # print("Result", result)
-    # print("Path Intersects Crimes", path_intersects_crimes)
-    return result
+    # # Check if any of the coordinates in the path intersect with the largeCrimes dataset
+    # path_intersects_crimes = False
+    # for coordinate in coordinates:
+    #     if any((largeCrimes['latitude'] == coordinate['latitude']) & (largeCrimes['longitude'] == coordinate['longitude'])):
+    #         path_intersects_crimes = True
+    #         break
+    # # print("Coordinates", coordinates)
+    # # print("Result", result)
+    # # print("Path Intersects Crimes", path_intersects_crimes)
+    # return result
     
-    return [coordinates, result, path_intersects_crimes]
+    # return [coordinates, result, path_intersects_crimes]
 
 
 @app.route('/route', methods=['GET', 'POST'])
@@ -170,6 +180,7 @@ def routeTest():
     
 
     return route_result
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)
