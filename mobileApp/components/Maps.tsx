@@ -369,6 +369,9 @@ export default function Maps({ session }: { session: Session }) {
     }
   };
 
+  const [polylineWithoutOptimization, setPolylineWithoutOptimization] =
+    useState<any | null>(null);
+
   const getData = (destination: any) => {
     Geocoder.from(destination)
       .then((json) => {
@@ -402,7 +405,26 @@ export default function Maps({ session }: { session: Session }) {
         setDistance(response.data.routes[0].legs[0].distance.text);
         setDuration(response.data.routes[0].legs[0].duration.text);
       })
+      .catch(function (error) {
+        console.log(error);
+      });
 
+    axios
+      .post(backendURL + "routeWithoutWaypoints", {
+        origin: currentLocation,
+        destination: destination,
+      })
+      .then(function (response) {
+        const decoded = decode(
+          response.data.routes[0].overview_polyline.points
+        );
+        setPolylineWithoutOptimization(
+          decoded.map((point: any) => ({
+            latitude: point[0],
+            longitude: point[1],
+          }))
+        );
+      })
       .catch(function (error) {
         console.log(error);
       });
@@ -638,6 +660,15 @@ export default function Maps({ session }: { session: Session }) {
             onPress={(event) => {
               console.log(event.nativeEvent);
             }}
+          />
+        )}
+        {polylineWithoutOptimization && (
+          <Polyline
+            coordinates={polylineWithoutOptimization}
+            strokeColor="grey" // fallback for when `strokeColors` is not supported by the map-provider
+            strokeWidth={1}
+            removeClippedSubviews={true}
+            pointerEvents="auto"
           />
         )}
         {markers.map((marker, index) => (

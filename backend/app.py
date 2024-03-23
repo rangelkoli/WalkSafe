@@ -116,9 +116,11 @@ def get_route(origin, destination, api_key):
     print("Result", result)
     routes = result['routes'][0]['legs']
 
-    #coordinatestoSend = [ (latitude, longitude) for latitude, longitude in mediumCrimes[['latitude', 'longitude']].values]
-    coordinatestoSend= [(43.036609, -76.123184)]
+    coordinatestoSend = [ (latitude, longitude) for latitude, longitude in mediumCrimes[['latitude', 'longitude']].values]
+
     res = are_points_on_polyline(coordinatestoSend, result['routes'][0]['overview_polyline']['points'])
+    if len(res) > 25:
+        res = res[:25]
     if len(res) > 0:        
         waypoints = "|".join([f"{point[0]},{point[1]}" for point in res])
         url = f"https://maps.googleapis.com/maps/api/directions/json?origin={originLat},{originLng}&destination={destination}&key={api_key}&mode=walking&alternatives=true&waypoints=optimize:true|{waypoints}"
@@ -183,6 +185,25 @@ def routeTest():
 
     return route_result
 
+@app.route('/routeWithoutWaypoints', methods=['GET', 'POST'])
+def routeWithoutWaypoints():
+    address = request.get_json()
+    origin = address['origin']
+    destination = address['destination']
+    print("Address", address)
+    print("Origin", origin)
+    print("Destination", destination)
+    originMain = origin
+    destinationMain = destination
+    api_key = "AIzaSyAAFSFl1024iEV_upockgRh5GZ7Svpi_Bk"
+    originLat = origin['latitude']
+    originLng = origin['longitude']
+
+    url = f"https://maps.googleapis.com/maps/api/directions/json?origin={originLat},{originLng}&destination={destination}&key={api_key}&mode=walking&alternatives=true"
+    response = requests.get(url)
+    result = response.json()
+
+    return result
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)

@@ -10,7 +10,19 @@ import MapView from "react-native-maps";
 import HomePage from "./components/HomePage";
 import BottomNavigation from "./components/navigation/navigation";
 import registerNNPushToken from "native-notify";
+import { LogBox } from "react-native";
 
+LogBox.ignoreLogs([
+  "Warning: ...",
+  "source.uri should not be an empty string",
+  "Possible Unhandled Promise Rejection",
+  "VirtualizedLists should never be nested inside plain ScrollViews with the same orientation - use another VirtualizedList-backed container instead.",
+  "Non-serializable values were found in the navigation state",
+  "Animated: `useNativeDriver` was not specified.",
+  "Animated.event now requires a second argument for options",
+  "Require cycle:",
+  "Possible...",
+]);
 export default function App() {
   registerNNPushToken(20296, "4CMRZxI3FQlP7ByH2W2taW");
 
