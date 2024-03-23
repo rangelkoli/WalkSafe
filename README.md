@@ -1,7 +1,5 @@
 # WalkSafe
 
-### [GirlScript Summer of Code 2022](https://gssoc.girlscript.tech/) Open Source Program
-
 <br/>
 
 <a href="">
