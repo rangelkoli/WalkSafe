@@ -56,6 +56,17 @@ def hello():
 
 
 def are_points_on_polyline(points, polyline):
+    """
+    Determines if the given points are on the given polyline.
+
+    Args:
+        points (list): List of points in the form [(x1, y1), (x2, y2), ...].
+        polyline (str): Encoded polyline representing a path.
+
+    Returns:
+        list: List of points that are on the polyline.
+
+    """
     print("Points", points)
     polyline = pl.decode(polyline)
     newWaypoints = []
@@ -94,6 +105,15 @@ def are_points_on_polyline(points, polyline):
 
 
 def get_nearest_coordinates(point):
+    """
+    Returns the nearest coordinates from the given point.
+
+    Args:
+        point (tuple): The coordinates of the point.
+
+    Returns:
+        tuple: The nearest coordinates.
+    """
     distances = []
     for waypoint in goodWaypoints:
         distance = geodesic(point, waypoint).meters
@@ -105,6 +125,17 @@ def get_nearest_coordinates(point):
 
 
 def get_route(origin, destination, api_key):
+    """
+    Retrieves the walking route from the origin to the destination using the Google Maps Directions API.
+
+    Args:
+        origin (dict): Dictionary containing the latitude and longitude of the origin location.
+        destination (str): The address or coordinates of the destination location.
+        api_key (str): API key for accessing the Google Maps Directions API.
+
+    Returns:
+        dict: The JSON response containing the walking route information.
+    """
     print("Origin", origin)
     print("Destination", destination)
     originLat = origin['latitude']
@@ -130,34 +161,15 @@ def get_route(origin, destination, api_key):
         return result
 
     return result
-    # coordinates = []
-    # for route in routes:
-    #     for legs in route['steps']:
-    #         coordinates.append({ 
-    #             'latitude': legs['start_location']['lat'], 
-    #             'longitude': legs['start_location']['lng'] 
-    #         })
-    #         coordinates.append({ 
-    #             'latitude': legs['end_location']['lat'], 
-    #             'longitude': legs['end_location']['lng'] 
-    #         })
-    
-    # # Check if any of the coordinates in the path intersect with the largeCrimes dataset
-    # path_intersects_crimes = False
-    # for coordinate in coordinates:
-    #     if any((largeCrimes['latitude'] == coordinate['latitude']) & (largeCrimes['longitude'] == coordinate['longitude'])):
-    #         path_intersects_crimes = True
-    #         break
-    # # print("Coordinates", coordinates)
-    # # print("Result", result)
-    # # print("Path Intersects Crimes", path_intersects_crimes)
-    # return result
-    
-    # return [coordinates, result, path_intersects_crimes]
-
 
 @app.route('/route', methods=['GET', 'POST'])
 def route():
+    """
+    Handle the '/route' endpoint to calculate and return the route between the given origin and destination.
+
+    Returns:
+        str: The calculated route as a string.
+    """
     address = request.get_json()
     origin = address['origin']
     destination = address['destination']
@@ -174,6 +186,11 @@ def route():
 
 @app.route('/routeTest', methods=['GET', 'POST'])
 def routeTest():
+    """
+    This function calculates and returns the route from the origin to the destination using the Google Maps API.
+
+    :return: The route from the origin to the destination.
+    """
     originMain = {
         'latitude': 43.032384, 
         'longitude': -76.1361
@@ -187,6 +204,14 @@ def routeTest():
 
 @app.route('/routeWithoutWaypoints', methods=['GET', 'POST'])
 def routeWithoutWaypoints():
+    """
+    Retrieves the origin and destination addresses from the request JSON,
+    calculates the walking route using the Google Maps Directions API,
+    and returns the result as a JSON response.
+
+    Returns:
+        dict: The JSON response containing the walking route information.
+    """
     address = request.get_json()
     origin = address['origin']
     destination = address['destination']

@@ -32,6 +32,7 @@ import { formatDistanceToNow } from "date-fns";
 Geocoder.init(googleAPIKEY); // use a valid API key
 const LOCATION_TASK_NAME = "background-location-task";
 
+// Custom map style
 const mapCustomStyle = [
   { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
@@ -114,6 +115,17 @@ const mapCustomStyle = [
 ];
 
 export default function Maps({ session }: { session: Session }) {
+  // Heatmap Markers
+  const [heatMapMarkersS, setHeatMapMarkersS] = useState<any>([]);
+  const [heatMapMarkersM, setHeatMapMarkersM] = useState<any>([]);
+  const [heatMapMarkersL, setHeatMapMarkersL] = useState<any>([]);
+
+  const [polylineWithoutOptimization, setPolylineWithoutOptimization] =
+    useState<any | null>(null);
+  const [locationRightNow, setLocationRightNow] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
   const [distance, setDistance] = useState(0);
   const [duration, setDuration] = useState(0);
   const [friendsData, setFriendsData] = useState<any>([]);
@@ -171,6 +183,11 @@ export default function Maps({ session }: { session: Session }) {
     { latitude: 43.032201, longitude: -76.122812 },
     { latitude: 43.032201, longitude: -76.122812 },
   ]);
+  const [homeLocationCoords, setHomeLocationCoords] = useState({
+    latitude: 0,
+    longitude: 0,
+  });
+
   const requestPermissions = async () => {
     const { status: foregroundStatus } =
       await Location.requestForegroundPermissionsAsync();
@@ -243,10 +260,7 @@ export default function Maps({ session }: { session: Session }) {
       );
     return d;
   }
-  const [locationRightNow, setLocationRightNow] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
+
   const location = async () => {
     requestPermissions();
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -285,6 +299,7 @@ export default function Maps({ session }: { session: Session }) {
       if (currentLocationValue.data) {
         setCurrentLocation(currentLocationValue.data[0].currentLocation);
       }
+      setHomeLocationCoords(checkInVal.data[0].homeLocationCoordinates);
 
       if (checkInVal?.data && checkInVal.data[0].checkIn === true) {
         const username = checkInVal.data[0].username;
@@ -344,7 +359,7 @@ export default function Maps({ session }: { session: Session }) {
     updateLocationDB();
     const interval = setInterval(() => {
       updateLocationDB();
-    }, 30000); // Update Location every 1 min
+    }, 7000); // Update Location every 1 min
     return () => {
       clearInterval(interval);
     };
@@ -368,9 +383,6 @@ export default function Maps({ session }: { session: Session }) {
       }
     }
   };
-
-  const [polylineWithoutOptimization, setPolylineWithoutOptimization] =
-    useState<any | null>(null);
 
   const getData = (destination: any) => {
     Geocoder.from(destination)
@@ -430,17 +442,6 @@ export default function Maps({ session }: { session: Session }) {
       });
   };
 
-  const increaseLikes = async (alert: string) => {
-    const { data, error } = await supabase
-      .from("alerts")
-      .update({ likes: 1 })
-      .eq("alert", alert);
-  };
-  // Heatmap Markers
-  const [heatMapMarkersS, setHeatMapMarkersS] = useState<any>([]);
-  const [heatMapMarkersM, setHeatMapMarkersM] = useState<any>([]);
-  const [heatMapMarkersL, setHeatMapMarkersL] = useState<any>([]);
-
   const getHeatMapMarkers = async () => {
     try {
       const responseS = await axios.get(backendURL + "crimeDataSmall");
@@ -489,10 +490,6 @@ export default function Maps({ session }: { session: Session }) {
             <Text style={{ color: "black" }}>Time: {duration}</Text>
           </View>
         ) : null}
-
-        {/* <Button title="Get Location" onPress={() => {
-          setMarkers(prevMarkers => [...prevMarkers, { latitude: 43.032201, longitude: -76.122812 }]) // Update markers state with new value
-        }} /> */}
       </SafeAreaView>
       <MapView
         ref={mapView}
@@ -517,6 +514,21 @@ export default function Maps({ session }: { session: Session }) {
         cacheEnabled={true}
         mapType="standard"
       >
+        {homeLocationCoords.latitude !== 0 && (
+          <Marker
+            coordinate={{
+              latitude: homeLocationCoords.latitude,
+              longitude: homeLocationCoords.longitude,
+            }}
+            title={"Home"}
+            description={"Home"}
+            tappable={true}
+            onPress={() => console.log("Marker pressed")}
+            stopPropagation={true}
+            icon={require("./home125.png")}
+            style={{ width: 50, height: 50, borderRadius: 50 }}
+          />
+        )}
         {heatMapMarkersS.length > 0 && (
           <Heatmap
             points={heatMapMarkersS}
@@ -536,7 +548,7 @@ export default function Maps({ session }: { session: Session }) {
             opacity={0.5}
             radius={25}
             gradient={{
-              colors: ["#00FF00"],
+              colors: ["#D5B60A"],
               startPoints: [0.001],
               colorMapSize: 256,
             }}
@@ -573,69 +585,9 @@ export default function Maps({ session }: { session: Session }) {
                 style={{ width: 50, height: 50, borderRadius: 50 }}
                 onLoadEnd={() => {}}
               />
-              {/* <Callout tooltip={true} onPress={() => console.log('Callout pressed')} style={{
-
-              }}>
-                <View style={{ flex: 1,
-                  padding: 10, 
-                  display: 'flex', 
-                  flexDirection: 'row', 
-                  justifyContent: 'center', 
-                  alignItems: 'center', 
-                  backgroundColor:'white',
-                  borderRadius: 20,
-                  shadowColor: 'black',
-                  shadowOffset: { width: 0, height: 2 },
-
-                  
-                  }}>
-                  <Text>{familyMarker.username}</Text>
-                  <Pressable onPress={() => console.log('Pressed')} style={{
-
-                  }}>
-
-                  </Pressable>
-                </View>
-              </Callout> */}
             </Marker>
           ))}
-        {/* <Marker coordinate={{ latitude: 43.032201, longitude: -76.122812 }} /> */}
-        {/* {destination && (
-          <MapViewDirections
-            origin={currentLocation}
-            destination={destination}
-            apikey={googleAPIKEY}
-            strokeWidth={3}
-            mode="WALKING"
-            optimizeWaypoints={true}
-            strokeColor="hotpink"
-            onStart={(params) => {
-              console.log(
-                `Started routing between "${params.origin}" and "${params.destination}"`
-              );
-            }}
-            splitWaypoints={true}
-            waypoints={[]} // Add waypoints
-            precision="high"
-            language="en"
-            channel="alerts"
-            miterLimit={10}
-            onReady={(result) => {
-              console.log("Distance: ", result.distance);
-              console.log("Duration: ", result.duration);
-              setRegion({
-                latitude: currentLocation.latitude,
-                longitude: currentLocation.longitude,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              });
-            }}
-            onError={(errorMessage) => {
-              console.log("GOT AN ERROR", errorMessage);
-            }}
-            region="us-east-1"
-          />
-        )} */}
+
         {destination && (
           <Polyline
             coordinates={polylineCoordinates}
@@ -666,7 +618,7 @@ export default function Maps({ session }: { session: Session }) {
           <Polyline
             coordinates={polylineWithoutOptimization}
             strokeColor="grey" // fallback for when `strokeColors` is not supported by the map-provider
-            strokeWidth={1}
+            strokeWidth={2}
             removeClippedSubviews={true}
             pointerEvents="auto"
           />
