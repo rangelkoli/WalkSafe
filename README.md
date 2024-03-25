@@ -11,8 +11,10 @@
 
 </div>
 
-<iframe width="" height="" src="https://youtu.be/A9GDLB774t4" style="width: 100%">
+<iframe width="1080" height="1920" src="https://youtu.be/A9GDLB774t4" style="width: 100%">
 </iframe>
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/A9GDLB774t4/0.jpg)](https://www.youtube.com/watch?v=A9GDLB774t4)
 
 ## Inspiration
 
