@@ -5,12 +5,10 @@
 <div style="display: flex; flex-direction: row; justify-contents: center; width: 100%; align-items: center; background-color: white">
 <div>
 <a href="">
-<img src="./docAssets/logoNew.png" alt="WalkSafe" style="width: 250px">
+<img src="./docAssets/logoMain.png" alt="WalkSafe" style="width: ">
 </a>
 </div>
-<div style="width: 100%; text-align: center">
-<p style="font-size: 36px; ">WalkSafe</p>
-</div>
+
 </div>
 
 ## Inspiration
