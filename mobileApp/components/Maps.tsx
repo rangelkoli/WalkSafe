@@ -359,7 +359,7 @@ export default function Maps({ session }: { session: Session }) {
     updateLocationDB();
     const interval = setInterval(() => {
       updateLocationDB();
-    }, 7000); // Update Location every 1 min
+    }, 5000); // Update Location every 1 min
     return () => {
       clearInterval(interval);
     };

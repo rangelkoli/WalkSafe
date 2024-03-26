@@ -61,8 +61,9 @@ The inspiration behind <b>WalkSafe</b> stems from a deep-seated commitment to le
 
 ## Project Images
 
-<div align="center">
-
-</div>
+<img src="./docAssets/1.jpg" alt="WalkSafe" style="width: ">
+<img src="./docAssets/2.jpg" alt="WalkSafe" style="width: ">
+<img src="./docAssets/3.jpg" alt="WalkSafe" style="width: ">
+<img src="./docAssets/realtimeTracking.gif" alt="WalkSafe" style="width: ">
 
 </div>
